@@ -1,0 +1,40 @@
+import { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+
+/**
+ * ajax 请求
+ */
+declare namespace Http {
+    // 请求配置项
+    interface RequestConfig extends AxiosRequestConfig {
+        // 是否让框架自动显示错误提示信息
+        isShowError?: boolean;
+
+        // 是否处理返回的response数据，默认系统框架会处理数据
+        isResultData?: boolean;
+
+        // 是否显示loading加载
+        isShowLoading?: boolean;
+
+        // 延迟加载定时器ID
+        showLoadingTimerId?: number;
+    }
+
+    // 请求接口返回的结果数据
+    interface ResponseData<T> {
+        flag: "S" | "F";
+        code?: string;
+        msg?: string;
+        data: T;
+    }
+
+    // 请求接口响应返回数据
+    interface Response<T = any> extends AxiosResponse {
+        config: RequestConfig;
+        data: ResponseData<T>;
+    }
+
+    // 异常失败
+    interface Error extends AxiosError {
+        config: RequestConfig;
+    }
+}

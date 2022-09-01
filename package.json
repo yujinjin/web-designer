@@ -1,0 +1,32 @@
+{
+	"name": "desingner",
+	"version": "1.0.0",
+	"description": "web建站设计器",
+	"main": "js/entrance.js",
+	"keywords": [
+		"web建站设计器"
+	],
+	"homepage": "https://yujinjin.github.io/desingner.git",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": ""
+	},
+	"scripts": {
+		"install:edit": "cd edit && cnpm install",
+		"install:preview": "cd preview && cnpm install",
+		"install-all": "npm-run-all install:*",
+		"serve:edit": "cd edit && npm run serve",
+		"serve:preview": "cd preview && npm run serve",
+		"serve-all": "npm-run-all --parallel serve:*",
+		"build:edit": "cd edit && npm run build",
+		"build:preview": "cd preview && npm build",
+		"build-all": "npm-run-all --parallel build:*"
+	},
+	"devDependencies": {
+		"npm-run-all": "^4.1.5"
+	},
+	"engines": {
+		"node": "^12 || >=14"
+	}
+}

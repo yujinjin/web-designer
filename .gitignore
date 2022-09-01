@@ -1,0 +1,8 @@
+node_modules/
+build/
+.project
+index.html
+npm-debug.log
+package-lock.json
+.vscode
+./dist
