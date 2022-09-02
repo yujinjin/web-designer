@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import HelloWorld from "./components/HelloWorld.vue";
+import preview from "./components/preview.vue";
 import { onMounted, onUnmounted } from "vue";
 
 onMounted(() => {
@@ -13,7 +13,7 @@ onUnmounted(() => {
 
 <template>
     <img alt="Vue logo" src="@/assets/logo.png" />
-    <HelloWorld msg="Hello Vue 3 + TS" />
+    <preview />
 </template>
 
 <style>

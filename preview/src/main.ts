@@ -5,11 +5,6 @@ import AppMain from "./app-main";
 
 const appMain = new AppMain();
 
-if (config.isDebug) {
-    // 调试模式加全局模式
-    window.appMain = appMain;
-}
-
 // 非微应用模式需要手动初始化
 // appMain.init(null);
 
@@ -26,10 +21,11 @@ export async function bootstrap() {
  */
 export async function mount(props: App.QiankunInput) {
     logs.info(appMain.config.appName + "mount props from main framework", props);
-    props.onGlobalStateChange((state, prev) => {
-        // state: 变更后的状态; prev 变更前的状态
-        logs.info(state, prev);
-    });
+    props.methods.init = function (dataList: Record<string, any>[]) {
+        console.info("03>>>>>>>>>>", dataList);
+    };
+
+    props.setGlobalState({ methods: props.methods, events: props.events });
     await appMain.init(props);
 }
 

@@ -59,9 +59,7 @@ declare namespace App {
     }
 
     /** 站点数据 */
-    interface LocationInfo {
-        
-    }
+    interface LocationInfo {}
 
     /** 日志 */
     interface Logs {
@@ -74,27 +72,30 @@ declare namespace App {
 
     /** qiankun微应用传入的属性值 */
     interface QiankunInputData {
+        events: {
+            /** 当前选中的组件索引变化（主应用实现） */
+            onChangeSelectedIndex(index: number): void;
 
-        /** 当前选中的组件索引变化 */
-        selectedIndexChange(index: number): void;
+            /** 拖拽排序（主应用实现） */
+            onDrag(oldIndex: number, newIndex: number): void;
 
-        /** 初始化页面数据（子应用实现） */
-        init(dataList: Record<string, any>[]): void;
+            /** 新增之后（主应用实现） */
+            onInsertAfter(index, componentData: Record<string, any>): void;
 
-        /** 拖拽排序（主应用实现） */
-        drag(oldIndex: number, newIndex: number): void;
+            /** 删除（主应用实现） */
+            onDelete(index): void;
+        };
 
-        /** 删除（主应用实现） */
-        delete(index): void;
+        methods: {
+            /** 初始化页面数据（子应用实现） */
+            init(dataList: Record<string, any>[]): void;
 
-        /** 新增之前（子应用实现） */
-        addBefore(componentData: Record<string, any>): void;
+            /** 新增之前（子应用实现） */
+            insert(componentData: Record<string, any>): void;
 
-        /** 新增之后（主应用实现） */
-        addAfter(index, componentData: Record<string, any>): void;
-
-        /** 修改组件属性值（子应用实现） */
-        updateComponentProperty(key, value): void;
+            /** 修改组件属性值（子应用实现） */
+            updateComponentProperty(key, value): void;
+        };
     }
 
     /** qiankun微应用框架 */

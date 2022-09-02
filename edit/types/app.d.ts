@@ -71,30 +71,6 @@ declare namespace App {
         fatal(...contents: any[]): void;
     }
 
-    /** qiankun主应用应用传出的属性值 */
-    interface QiankunState {
-        /** 当前选中的组件索引变化 */
-        selectedIndexChange(index: number): void;
-
-        /** 初始化页面数据（子应用实现） */
-        init(dataList: Record<string, any>[]): void;
-
-        /** 拖拽排序（主应用实现） */
-        drag(oldIndex: number, newIndex: number): void;
-
-        /** 删除（主应用实现） */
-        delete(index): void;
-
-        /** 新增之前（子应用实现） */
-        addBefore(componentData: Record<string, any>): void;
-
-        /** 新增之后（主应用实现） */
-        addAfter(index, componentData: Record<string, any>): void;
-
-        /** 修改组件属性值（子应用实现） */
-        updateComponentProperty(key, value): void;
-    }
-
     /** 当前页面主要方法 */
     interface AppMain {
         // 项目配置

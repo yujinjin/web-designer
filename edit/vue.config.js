@@ -78,6 +78,7 @@ module.exports = {
         config.plugin("define").tap(options => {
             // DefinePlugin注入全局变量
             options[0]["process.env"]["VUE_APP_BUILD_TIME"] = new Date().getTime();
+            options[0]["process.env"]["VUE_APP_NAME"] = JSON.stringify(pkg.name);
             options[0]["process.env"]["VUE_APP_VERSION"] = JSON.stringify(pkg.version);
             return options;
         });
