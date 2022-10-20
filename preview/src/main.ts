@@ -1,6 +1,15 @@
+/*
+ * @创建者: yujinjin9@126.com
+ * @创建时间: 2022-07-21 21:47:59
+ * @最后修改作者: yujinjin9@126.com
+ * @最后修改时间: 2022-10-20 11:46:50
+ * @项目的路径: \web-designer\preview\src\main.ts
+ * @描述: 头部注释配置模板
+ */
 import { App } from "/#/app";
 import "@style/app.less";
 import "@style/iconfont.css";
+import "vant/lib/index.css";
 import AppMain from "./app-main";
 
 const appMain = new AppMain();
@@ -21,11 +30,11 @@ export async function bootstrap() {
  */
 export async function mount(props: App.QiankunInput) {
     logs.info(appMain.config.appName + "mount props from main framework", props);
-    props.methods.init = function (dataList: Record<string, any>[]) {
-        console.info("03>>>>>>>>>>", dataList);
-    };
+    // props.methods.init = function (dataList: Record<string, any>[]) {
+    //     console.info("03>>>>>>>>>>", dataList);
+    // };
 
-    props.setGlobalState({ methods: props.methods, events: props.events });
+    // props.setGlobalState({ methods: props.methods, events: props.events });
     await appMain.init(props);
 }
 

@@ -1,8 +1,12 @@
-/**
- * 作者：yujinjin9@126.com
- * 时间：2022-05-11
- * 描述：基础环境
+/*
+ * @创建者: yujinjin9@126.com
+ * @创建时间: 2022-08-30 11:29:05
+ * @最后修改作者: yujinjin9@126.com
+ * @最后修改时间: 2022-10-18 16:08:55
+ * @项目的路径: \web-designer\preview\src\app-main.ts
+ * @描述：基础环境
  */
+
 import { createApp, App as VueApplication } from "vue";
 import Appvue from "@/App.vue";
 import { App } from "/#/app";
@@ -35,15 +39,10 @@ export default class AppMain implements App.AppMain {
     }
 
     // 初始化
-    async init(qiankunProps: App.QiankunInput | null) {
-        this.vueAppInstance = await this.initVue();
+    async init(qiankunProps: App.QiankunInput) {
         this.qiankunProps = qiankunProps;
-        if (window.__POWERED_BY_QIANKUN__) {
-            this.mount(this.qiankunProps!.container);
-        } else {
-            // 没有使用qiankun框架直接挂载到dom上
-            this.mount("#app-preview");
-        }
+        this.vueAppInstance = await this.initVue();
+        this.mount(this.qiankunProps.container);
     }
 
     // 初始化项目配置
@@ -56,7 +55,7 @@ export default class AppMain implements App.AppMain {
 
     // 初始化vue
     async initVue() {
-        const vueAppInstance = createApp(Appvue);
+        const vueAppInstance = createApp(Appvue, { qiankun: this.qiankunProps });
         // 是否启用对组件初始化、编译、渲染和更新的性能追踪
         vueAppInstance.config.performance = config.isDebug;
         // debug 模式

@@ -73,28 +73,32 @@ declare namespace App {
     /** qiankun微应用传入的属性值 */
     interface QiankunInputData {
         events: {
-            /** 当前选中的组件索引变化（主应用实现） */
-            onChangeSelectedIndex(index: number): void;
+            /** 初始化组件，让其可以拖拽（主应用实现，子应用调用） */
+            onInit(dragContainer: HTMLElement): Promise<void>;
 
-            /** 拖拽排序（主应用实现） */
-            onDrag(oldIndex: number, newIndex: number): void;
+            /** 当前选中的组件索引变化（主应用实现，子应用调用） */
+            onChangeSelectedIndex(index: number): Promise<void>;
 
-            /** 新增之后（主应用实现） */
-            onInsertAfter(index, componentData: Record<string, any>): void;
-
-            /** 删除（主应用实现） */
-            onDelete(index): void;
+            /**
+             * 删除（主应用实现）
+             * @param index 删除的索引
+             * @param selectedIndex 删除默认选中的索引（-1:表示不选）
+             */
+            onDelete(index: number, selectedIndex: number): Promise<void>;
         };
 
         methods: {
-            /** 初始化页面数据（子应用实现） */
-            init(dataList: Record<string, any>[]): void;
+            /** 初始化页面数据（子应用实现，主应用调用） */
+            init(dataList: Record<string, any>[]): Promise<void>;
 
-            /** 新增之前（子应用实现） */
-            insert(componentData: Record<string, any>): void;
+            /** 新增操作（子应用实现，主应用调用） */
+            insert(index: number, componentData: Record<string, any>): Promise<void>;
+
+            /** 拖拽排序（子应用实现，主应用调用） */
+            drag(oldIndex: number, newIndex: number): Promise<void>;
 
             /** 修改组件属性值（子应用实现） */
-            updateComponentProperty(key, value): void;
+            updateComponentProperty(key, value): Promise<void>;
         };
     }
 

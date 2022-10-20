@@ -1,21 +1,48 @@
+<!--
+ * @创建者: yujinjin9@126.com
+ * @创建时间: 2022-09-02 09:58:20
+ * @最后修改作者: yujinjin9@126.com
+ * @最后修改时间: 2022-10-20 11:24:58
+ * @项目的路径: \web-designer\edit\src\components\preview.vue
+ * @描述: 页面预览
+-->
 <template>
     <div class="preview-container" ref="previewRef"></div>
 </template>
 <script setup lang="ts">
+import { ElMessage } from "element-plus";
 import { loadMicroApp, initGlobalState, MicroApp } from "qiankun";
-import { onMounted, onUnmounted, ref, watch, defineProps } from "vue";
-import type { Ref } from "vue";
+import { onMounted, onUnmounted, ref, defineProps, defineEmits, inject } from "vue";
+import type { Ref, PropType } from "vue";
+import Sortable from "sortablejs";
+import { Widget } from "/#/widget";
+import { randomId } from "@/utils/generate";
 // import { useStore } from "vuex";
 
 // vuex
 // const store = useStore();
 
 const props = defineProps({
-    // 页面数据
-    pageData: {
-        type: Object
+    // 选中的组件实例数据
+    selectedComponent: {
+        type: Object as PropType<Widget.ComponentInstance | null>,
+        default: null
+    },
+
+    // 模板编辑表单字段验证
+    validate: {
+        type: Function,
+        required: true
     }
 });
+
+const emits = defineEmits(["update:selectedComponent"]);
+
+// 当前页面组件列表数据
+const pageComponentList: Ref<Array<Widget.ComponentInstance>> = ref([]);
+
+// 当前组件克隆的数据
+const widgetCloneData: Ref<Record<string, any> | null> | undefined = inject("widgetCloneData");
 
 // 预览
 const previewRef: Ref<HTMLDivElement | null> = ref(null);
@@ -23,40 +50,112 @@ const previewRef: Ref<HTMLDivElement | null> = ref(null);
 // 预览微应用
 const previewMicroApp: Ref<MicroApp | null> = ref(null);
 
+// Sortable 实例
+const sortableInstance: Ref<any> = ref(null);
+
+const validateForm = async function (actionType: "add" | "change" = "add", isShowError: boolean = true) {
+    try {
+        await props.validate();
+    } catch (e) {
+        logs.error(e);
+        const message = "当前表单未验证通过，不能" + (actionType === "add" ? "新增" : "切换");
+        if (isShowError) {
+            ElMessage({
+                message,
+                type: "warning"
+            });
+        }
+        throw new Error(message);
+    }
+};
+
+const initDrag = function (dragContainer: HTMLElement) {
+    sortableInstance.value = new Sortable(dragContainer, {
+        group: { name: "widget", put: true },
+        animation: 300,
+        draggable: ".widget-item",
+        onAdd: async function (e: any) {
+            await validateForm();
+            if (widgetCloneData && widgetCloneData.value) {
+                const selectedComponentInstanceData: Widget.ComponentInstance = {
+                    id: randomId(),
+                    code: widgetCloneData.value.code,
+                    name: widgetCloneData.value.name,
+                    previewComponentName: widgetCloneData.value.previewComponentName,
+                    caseCode: widgetCloneData.value.caseData.code,
+                    caseName: widgetCloneData.value.caseData.name,
+                    caseDiagram: widgetCloneData.value.caseData.diagram,
+                    data: widgetCloneData.value.caseData.data
+                };
+                e.clone.dataset.id = selectedComponentInstanceData.id;
+                pageComponentList.value.splice(e.newIndex, 0, selectedComponentInstanceData);
+                methods.insert(e.newIndex, selectedComponentInstanceData);
+                emits("update:selectedComponent", selectedComponentInstanceData);
+            }
+            console.info("onAdd", e.newIndex, e.clone.dataset);
+        },
+        onSort: function (e: any) {
+            if (!e.clone.dataset.id) {
+                return;
+            }
+            methods.drag(e.oldIndex, e.newIndex);
+            console.info("onSort", e.clone.dataset.id, e.oldIndex, e.newIndex, sortableInstance.value!.toArray());
+        }
+        // onStart: function (e: Event) {
+        //     console.info("onStart", e);
+        // },
+        // onEnd: function (e: Event) {
+        //     console.info("onEnd", e);
+        // }
+    });
+};
+
 const events = {
-    /** 当前选中的组件索引变化（主应用实现） */
-    onChangeSelectedIndex(index: number) {
-        console.info("-----------------", index);
+    /** 初始化组件，让其可以拖拽（主应用实现，子应用调用-1） */
+    async onInit(dragContainer: HTMLElement) {
+        await methods.init(pageComponentList.value);
+        initDrag(dragContainer);
     },
-    /** 拖拽排序（主应用实现） */
-    onDrag(oldIndex: number, newIndex: number) {
-        console.info("-----------------", oldIndex, newIndex);
+
+    /** 当前选中的组件索引变化（主应用实现，子应用调用） */
+    async onChangeSelectedIndex(index: number) {
+        console.info("onChangeSelectedIndex", index, pageComponentList.value[index]);
+        await validateForm();
+        emits("update:selectedComponent", pageComponentList.value[index]);
     },
-    /** 新增之后（主应用实现） */
-    onInsertAfter(index: number, componentData: Record<string, any>) {
-        console.info("-----------------", index, componentData);
-    },
-    /** 删除（主应用实现） */
-    onDelete(index: number) {
-        console.info("-----------------", index);
+
+    /** 删除（主应用实现，子应用调用） */
+    onDelete(index: number, selectedIndex: number) {
+        console.info("onDelete", index);
+        pageComponentList.value.splice(index, 1);
+        if (selectedIndex === -1) {
+            emits("update:selectedComponent", null);
+        } else {
+            emits("update:selectedComponent", pageComponentList.value[selectedIndex]);
+        }
     }
 };
 
 const methods = {
-    /** 初始化页面数据（子应用实现） */
-    init(dataList: Record<string, any>[]) {
+    /** 初始化页面数据（子应用实现，主应用调用-0） */
+    async init(dataList: Record<string, any>[]): Promise<void> {
         // TODO: 子应用实现
-        logs.debug(dataList);
+        logs.debug(config.appName, dataList);
     },
 
-    /** 新增之前（子应用实现） */
-    insert(componentData: Record<string, any>) {
+    /** 新增操作（子应用实现，主应用调用） */
+    async insert(index: number, componentData: Record<string, any>): Promise<void> {
         // TODO: 子应用实现
-        logs.debug(componentData);
+        logs.debug(index, componentData);
     },
 
-    /** 修改组件属性值（子应用实现） */
-    updateComponentProperty(key: string, value: any) {
+    /** 拖拽排序（子应用实现，主应用调用） */
+    async drag(oldIndex: number, newIndex: number): Promise<void> {
+        console.info("-----------------", oldIndex, newIndex);
+    },
+
+    /** 修改组件属性值（子应用实现，主应用调用） */
+    async updateComponentProperty(key: string, value: any): Promise<void> {
         // TODO: 子应用实现
         logs.debug(key, value);
     }
@@ -72,15 +171,9 @@ onMounted(() => {
 
     const { onGlobalStateChange } = initGlobalState({ events, methods });
     onGlobalStateChange(state => {
-        console.info("..............onGlobalStateChange");
         Object.assign(methods, state.methods);
     });
 });
-
-watch(
-    () => props.pageData,
-    () => {}
-);
 
 onUnmounted(() => {
     previewMicroApp.value!.unmount();
@@ -88,5 +181,6 @@ onUnmounted(() => {
 </script>
 <style lang="less" scoped>
 .preview-container {
+    width: 400px;
 }
 </style>
