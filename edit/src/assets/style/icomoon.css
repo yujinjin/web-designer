@@ -25,7 +25,6 @@
 
 .icon-button:before {
     content: "\e900";
-    color: #7d7d7d;
 }
 .icon-images:before {
     content: "\e90e";

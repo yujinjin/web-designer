@@ -2,7 +2,7 @@
  * @创建者: yujinjin9@126.com
  * @创建时间: 2022-09-21 11:37:12
  * @最后修改作者: yujinjin9@126.com
- * @最后修改时间: 2022-10-17 17:36:22
+ * @最后修改时间: 2022-12-05 10:57:48
  * @项目的路径: \web-designer\edit\src\components\template-edit.vue
  * @描述: 组件内容编辑
 -->
@@ -46,6 +46,7 @@ onUnmounted(() => {
 </script>
 <style lang="less" scoped>
 .template-edit {
-    flex: 1;
+    width: 350px;
+    flex-shrink: 0;
 }
 </style>

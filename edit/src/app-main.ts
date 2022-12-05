@@ -1,9 +1,14 @@
-/**
- * 作者：yujinjin9@126.com
- * 时间：2022-05-11
- * 描述：基础环境
+/*
+ * @创建者: yujinjin9@126.com
+ * @创建时间: 2022-09-01 14:18:28
+ * @最后修改作者: yujinjin9@126.com
+ * @最后修改时间: 2022-12-02 17:38:47
+ * @项目的路径: \web-designer\edit\src\app-main.ts
+ * @描述：项目程序入口
  */
 import { createApp, App as VueApplication } from "vue";
+import ElementPlus from "element-plus";
+import "element-plus/dist/index.css";
 import Appvue from "@/App.vue";
 import { App } from "/#/app";
 import type { Store } from "vuex";
@@ -62,6 +67,7 @@ export default class AppMain implements App.AppMain {
                 logs.error(JSON.stringify({ message: "Vue errorHandler:" + err, type: info }));
             };
         }
+        vueAppInstance.use(ElementPlus);
         vueAppInstance.use(this.store);
         return vueAppInstance;
     }

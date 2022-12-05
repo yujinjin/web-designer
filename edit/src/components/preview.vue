@@ -2,14 +2,23 @@
  * @创建者: yujinjin9@126.com
  * @创建时间: 2022-09-02 09:58:20
  * @最后修改作者: yujinjin9@126.com
- * @最后修改时间: 2022-10-20 11:24:58
+ * @最后修改时间: 2022-12-02 17:49:22
  * @项目的路径: \web-designer\edit\src\components\preview.vue
  * @描述: 页面预览
 -->
 <template>
-    <div class="preview-container" ref="previewRef"></div>
+    <div class="preview-wrapper">
+        <div class="navbar-header">
+            <el-button type="primary" link :icon="RefreshLeft">重置</el-button>
+            <el-button type="primary" link :icon="View">预览</el-button>
+            <el-button type="primary" link :icon="Finished">保存</el-button>
+            <el-button type="primary" link :icon="SetUp">页面属性</el-button>
+        </div>
+        <div class="preview-container" ref="previewRef"></div>
+    </div>
 </template>
 <script setup lang="ts">
+import { RefreshLeft, View, Finished, SetUp } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { loadMicroApp, initGlobalState, MicroApp } from "qiankun";
 import { onMounted, onUnmounted, ref, defineProps, defineEmits, inject } from "vue";
@@ -53,7 +62,7 @@ const previewMicroApp: Ref<MicroApp | null> = ref(null);
 // Sortable 实例
 const sortableInstance: Ref<any> = ref(null);
 
-const validateForm = async function (actionType: "add" | "change" = "add", isShowError: boolean = true) {
+const validateForm = async function (actionType: "add" | "change" = "add", isShowError: Boolean = true) {
     try {
         await props.validate();
     } catch (e) {
@@ -180,7 +189,32 @@ onUnmounted(() => {
 });
 </script>
 <style lang="less" scoped>
-.preview-container {
-    width: 400px;
+.preview-wrapper {
+    min-width: 400px;
+    width: 650px;
+    padding-top: 80px;
+    position: relative;
+    border-left: 1px solid #e0e0e0;
+    border-right: 1px solid #e0e0e0;
+
+    .navbar-header {
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        top: 0px;
+        height: 50px;
+        text-align: right;
+        padding: 15px;
+        border-bottom: 1px solid #e0e0e0;
+
+        .el-button {
+            margin-left: 10px;
+        }
+    }
+
+    .preview-container {
+        width: 400px;
+        margin: 0 auto;
+    }
 }
 </style>

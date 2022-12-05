@@ -103,6 +103,7 @@ module.exports = {
         disableHostCheck: true, // 禁用服务检查
         hot: false,
         port: process.env.VUE_APP_PORT,
+        open: true,
         overlay: {
             warnings: false,
             errors: true

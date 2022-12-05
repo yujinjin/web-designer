@@ -2,7 +2,7 @@
  * @创建者: yujinjin9@126.com
  * @创建时间: 2022-09-01 14:18:28
  * @最后修改作者: yujinjin9@126.com
- * @最后修改时间: 2022-10-19 17:45:52
+ * @最后修改时间: 2022-12-02 16:43:56
  * @项目的路径: \web-designer\edit\src\App.vue
  * @描述: 头部注释配置模板
 -->
@@ -48,5 +48,6 @@ const cloneHandle = function (data) {
 .web-designer {
     display: flex;
     height: 100%;
+    justify-content: center;
 }
 </style>
