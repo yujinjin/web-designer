@@ -2,7 +2,7 @@
  * @创建者: yujinjin9@126.com
  * @创建时间: 2022-09-02 09:58:20
  * @最后修改作者: yujinjin9@126.com
- * @最后修改时间: 2022-12-02 17:49:22
+ * @最后修改时间: 2024-04-24 14:25:42
  * @项目的路径: \web-designer\edit\src\components\preview.vue
  * @描述: 页面预览
 -->
@@ -173,7 +173,7 @@ const methods = {
 onMounted(() => {
     previewMicroApp.value = loadMicroApp({
         name: "preview",
-        entry: "http://10.96.140.234:8082/index.html",
+        entry: "http://localhost:8082/index.html",
         container: previewRef.value!,
         props: { events, methods }
     });

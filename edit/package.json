@@ -8,18 +8,18 @@
         "lint": "vue-cli-service lint"
     },
     "dependencies": {
-        "axios": "^0.27.2",
-        "vue": "^3.2.38",
-        "vuex": "^4.0.2",
-        "vue-types": "^4.2.1",
-        "qiankun": "^2.8.3",
+        "axios": "^1.6.8",
+        "vue": "^3.4.27",
+        "pinia": "^2.1.7",
+        "vue-types": "^5.1.2",
+        "qiankun": "^2.10.16",
         "svgaplayerweb": "^2.3.2",
-        "@element-plus/icons-vue": "^2.0.9",
-        "element-plus": "^2.2.15",
+        "@element-plus/icons-vue": "^2.3.1",
+        "element-plus": "^2.7.3",
+        "mockjs": "^1.1.0",
         "vuedraggable": "^4.1.0"
     },
     "devDependencies": {
-        "mockjs": "^1.1.0",
         "alphabetjs": "^0.1.4",
         "prettier": "^2.5.1",
         "less": "^4.1.2",
