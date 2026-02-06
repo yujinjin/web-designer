@@ -1,0 +1,157 @@
+html,
+body {
+    overflow: auto;
+}
+
+html,
+body,
+#app {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+}
+
+body {
+    font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+    margin: 0;
+    font-size: 14px;
+    color: #333333;
+}
+
+* {
+    box-sizing: border-box;
+    outline: none;
+    scrollbar-color: #ddd #fafafa;
+    scrollbar-track-color: #fafafa;
+    scrollbar-width: thin;
+}
+
+/*滚动条整体样式*/
+::-webkit-scrollbar {
+    width: 6px; /*竖向滚动条的宽度*/
+    height: 6px; /*横向滚动条的高度*/
+}
+::-webkit-scrollbar-thumb {
+    /*滚动条里面的小方块*/
+    background: #ddd;
+    border-radius: 5px;
+}
+::-webkit-scrollbar-track {
+    /*滚动条轨道的样式*/
+    background: #fafafa;
+    border-radius: 5px;
+}
+
+[v-cloak] {
+    display: block;
+}
+
+img {
+    max-width: 100%;
+}
+
+ol,
+ul {
+    list-style: none;
+}
+
+.hidden {
+    display: none;
+}
+
+.clearfix:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* 普通单行样式（必须指定宽度） */
+.text-ellipsis-block {
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 多行样式(不要有padding) */
+.text-ellipsis-box {
+    display: -webkit-box;
+    word-break: break-all;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+}
+
+a {
+    color: #337ab7;
+    text-decoration: none;
+}
+
+div {
+    display: block;
+}
+
+i.svg-icon {
+    --color: inherit;
+    height: 1em;
+    width: 1em;
+    line-height: 1em;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    fill: currentColor;
+    color: var(--color);
+    font-size: inherit;
+
+    svg {
+        height: 1em;
+        width: 1em;
+    }
+}
+
+/**************************** 自定义dialog样式 start *********************************/
+.common-dialog {
+    padding: 0px;
+    --el-font-size-base: 12px;
+    .el-dialog__header {
+        border-bottom: 1px solid #eeeeee;
+        padding: 16px 24px;
+        margin-right: 0px;
+
+        .el-dialog__title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #262626;
+            line-height: 24px;
+            display: inline-block;
+        }
+
+        .el-dialog__headerbtn {
+            top: 1px;
+            right: 5px;
+        }
+    }
+
+    .el-dialog__body {
+        padding: 12px 20px 0px;
+        max-height: calc(100vh - 40px * 2 - 56px - 65px);
+        overflow-y: auto;
+    }
+
+    .el-dialog__footer {
+        padding: 8px 20px;
+        box-shadow:
+            0px -1px 0px 0px #f5f5f5,
+            0px 1px 30px 0px rgba(0, 21, 41, 0.12);
+
+        .el-button {
+            min-width: 80px;
+        }
+    }
+}
+/**************************** 自定义dialog样式 end *********************************/

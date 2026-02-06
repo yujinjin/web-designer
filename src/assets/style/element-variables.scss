@@ -1,0 +1,38 @@
+/* 改变主题色变量 */
+@forward "element-plus/theme-chalk/src/common/var.scss" with (
+    $colors: (
+        "primary": (
+            "base": #00b85c
+        ),
+        "danger": (
+            "base": #e63948
+        )
+    ),
+    $text-color: (
+        "disabled": #00b85c
+    ),
+    $border-color: (
+        "": #ebebeb
+    ),
+    $border-radius: (
+        "base": 2px
+    ),
+    $font-size: (
+        "base": 12px
+    ),
+    $common-component-size: (
+        "default": 28px
+    ),
+    $select-wrapper-padding: (
+        "default": 2px 12px
+    ),
+    $input-font-size: (
+        "default": 12px
+    ),
+    $select: (
+        "input-font-size": 12px
+    )
+);
+
+// 如果你想导入所有样式:
+@use "element-plus/theme-chalk/src/index.scss" as *;

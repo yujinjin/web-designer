@@ -1,0 +1,71 @@
+{
+    "editor.formatOnSave": true,
+    "editor.formatOnType": false,
+    "editor.formatOnPaste": false,
+    "editor.tabSize": 4,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    // 保存时用eslint格式化
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "eslint.enable": true,
+    "eslint.format.enable": true,
+    "eslint.run": "onSave",
+    "eslint.validate": ["vue", "javascript", "javascriptreact", "typescript", "typescriptreact"],
+    "prettier.tabWidth": 4,
+    "prettier.useTabs": false,
+    "prettier.bracketSameLine": false,
+    "prettier.jsxSingleQuote": false,
+    "prettier.printWidth": 200,
+    "prettier.semi": true,
+    "prettier.singleQuote": false,
+    "prettier.trailingComma": "none",
+    "prettier.arrowParens": "avoid",
+    "prettier.htmlWhitespaceSensitivity": "ignore",
+    "prettier.bracketSpacing": true,
+    "prettier.quoteProps": "consistent",
+    "javascript.suggest.autoImports": true,
+    "typescript.suggest.autoImports": true,
+    // 两者会在格式化js时冲突，所以需要关闭默认js格式化程序
+    // "javascript.format.enable": false,
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "javascript.format.insertSpaceBeforeFunctionParenthesis": true,
+    "typescript.format.insertSpaceBeforeFunctionParenthesis": true,
+    // 禁用 Vetur 的所有功能
+    "vetur.enable": false,
+    // 启用 Volar 的功能
+    "volar.enable": true,
+    // 自动补全 ref() 语法糖
+    "volar.autoCompleteRefs": true,
+    // 自动导入组件
+    "volar.autoImportComponent": true,
+    // 启用组件名称补全的前缀匹配（如输入 "Btn" 匹配 "BaseButton"）
+    "volar.completion.prefixMatching": true,
+    // 控制是否在自动补全中显示导入建议
+    "volar.completion.showAutoImportSuggestions": true,
+    "[vue]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[less]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[css]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+}

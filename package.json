@@ -1,30 +1,86 @@
 {
-    "name": "desingner",
-    "version": "1.0.0",
-    "description": "web建站设计器",
-    "main": "js/entrance.js",
+    "name": "pc-form",
+    "version": "0.1.0",
+    "description": "基于vite + vue3 + vue-router + pinia + element-plus + mockjs + typescript搭建的后台管理系统框架，风格：绿色、紧凑型",
+    "type": "module",
     "keywords": [
-        "web建站设计器"
+        "h5"
     ],
-    "homepage": "https://yujinjin.github.io/desingner.git",
-    "license": "MIT",
+    "homepage": "https://yujinjin.github.io/",
+    "bugs": {
+        "email": "yujinjin9@126.com",
+        "url": "https://github.com/yujinjin/web-designer/issues"
+    },
+    "author": {
+        "name": "jack yu",
+        "email": "yujinjin9@126.com",
+        "url": "https://yujinjin.github.io/"
+    },
     "repository": {
         "type": "git",
-        "url": ""
+        "url": "https://github.com/yujinjin/web-designer.git"
     },
     "scripts": {
-        "install:edit": "cd edit && cnpm install",
-        "install:preview": "cd preview && cnpm install",
-        "install-all": "npm-run-all install:*",
-        "serve:edit": "cd edit && npm run serve",
-        "serve:preview": "cd preview && npm run serve",
-        "serve-all": "npm-run-all --parallel serve:*",
-        "build:edit": "cd edit && npm run build",
-        "build:preview": "cd preview && npm build",
-        "build-all": "npm-run-all --parallel build:*"
+        "mdev": "cross-env MOCK_DATA=1 vite --mode dev",
+        "dev": "vite --mode dev",
+        "uat": "vite --mode uat",
+        "prd": "vite --mode prd",
+        "B_DEV": "vue-tsc -b && vite build --mode dev",
+        "B_UAT": "vue-tsc -b && vite build --mode uat",
+        "B_PRE": "vue-tsc -b && vite build --mode pre",
+        "B_PRD": "vue-tsc -b && vite build --mode prd",
+        "preview": "vite preview",
+        "format": "prettier --write \"**/*.{js,cjs,mjs,ts,tsx,json,css,scss,vue,html,md}\"",
+        "lint": "eslint .",
+        "lint:fix": "eslint --fix ."
+    },
+    "dependencies": {
+        "vue": "^3.5.17",
+        "pinia": "^3.0.3",
+        "axios": "^1.10.0",
+        "dayjs": "^1.11.13",
+        "element-plus": "^2.10.3",
+        "sortablejs": "^1.15.6",
+        "@element-plus/icons-vue": "^2.3.1",
+        "echarts": "^5.6.0",
+        "monaco-editor": "^0.52.2",
+        "@vueuse/core": "^13.5.0",
+        "mockjs": "^1.1.0",
+        "@yujinjin/utils": "^0.0.4",
+        "@yujinjin/cms-components": "0.0.2"
     },
     "devDependencies": {
-        "npm-run-all": "^4.1.5"
+        "vite": "^7.0.2",
+        "vitest": "^3.2.4",
+        "@vitejs/plugin-vue": "^6.0.0",
+        "@vitejs/plugin-vue-jsx": "^5.0.1",
+        "vite-plugin-monaco-editor": "^1.1.0",
+        "vite-svg-loader": "^5.1.0",
+        "sass": "1.89.2",
+        "vue-tsc": "^3.0.1",
+        "prettier": "^3.6.2",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.8.3",
+        "globals": "^16.3.0",
+        "eslint": "^9.30.1",
+        "eslint-config-prettier": "^10.1.5",
+        "eslint-plugin-prettier": "^5.5.1",
+        "eslint-plugin-import-x": "^4.16.1",
+        "eslint-import-resolver-typescript": "^4.4.4",
+        "eslint-plugin-vue": "^10.3.0",
+        "eslint-plugin-jsonc": "^2.20.1",
+        "eslint-plugin-markdown": "^5.1.0",
+        "eslint-plugin-vitest": "^0.5.4",
+        "@types/mockjs": "^1.0.10",
+        "@types/node": "^24.0.10",
+        "@types/qrcode": "^1.5.5",
+        "@types/sortablejs": "^1.15.9",
+        "@typescript-eslint/eslint-plugin": "^8.36.0",
+        "@typescript-eslint/parser": "^8.36.0",
+        "@vue/eslint-config-prettier": "^10.2.0",
+        "@vue/eslint-config-typescript": "^14.6.0",
+        "@vue/tsconfig": "^0.7.0",
+        "cross-env": "^7.0.3"
     },
     "prettier": {
         "tabWidth": 4,
@@ -37,10 +93,11 @@
         "singleQuote": false,
         "quoteProps": "consistent",
         "htmlWhitespaceSensitivity": "ignore",
-        "bracketSpacing": true
+        "bracketSpacing": true,
+        "endOfLine": "crlf"
     },
     "engines": {
-        "node": ">=18"
+        "node": ">=22"
     },
     "browserslist": [
         "> 1%",
