@@ -15,7 +15,7 @@ export function useCreateDefaultData(): WidgetFormData {
             labelWidth: 120,
             disabled: false
         },
-        componentEvents: {
+        componentFunctions: {
             init: null
         },
         settingData: {
@@ -35,11 +35,10 @@ export function useSettingDataValueChange(data: WidgetFormData, fileName: keyof 
         case "inline":
         case "labelPosition":
         case "labelWidth":
-            (data.formAttributes as any)[fileName] = value;
-            // Object.assign(data.formAttributes, { [fileName]: value });
+            data.formAttributes[fileName] = value;
             break;
         case "onInit": {
-            data.componentEvents.init = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.init = value ? value.split("\n").slice(1, -1).join("\n") : null;
         }
     }
     (data.settingData as any)[fileName] = value;

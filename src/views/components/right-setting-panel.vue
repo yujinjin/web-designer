@@ -14,6 +14,7 @@
 import { inject, defineAsyncComponent, computed, type Ref } from "vue";
 import formSetting from "./widgets-setting/form.vue";
 import { type WidgetFormData } from "@/views/composables/types";
+import { getWidgetList } from "@/views/composables/widget-manage";
 
 // 获取注入的选中的组件id
 const selectedWigetId = inject<Ref<string | null>>("selectedWigetId");
@@ -26,11 +27,44 @@ const selectedWidgetData = computed(() => {
     return widgetFormData?.widgets.find((item: any) => item.id === selectedWigetId?.value);
 });
 
+// 获取组件的列表数据
+const widgetList = getWidgetList();
+
 // 根据组件类型返回对应的设置组件
 const widgetComponent = computed(() => {
     switch (selectedWidgetData.value?.code) {
-        case "text":
+        case widgetList.WIDGET_TEXT.code:
             return defineAsyncComponent(() => import("./widgets-setting/text.vue"));
+        case widgetList.WIDGET_INPUT_NUMBER.code:
+            return defineAsyncComponent(() => import("./widgets-setting/input-number.vue"));
+        case widgetList.WIDGET_RADIO_GROUP.code:
+            return defineAsyncComponent(() => import("./widgets-setting/radio-group.vue"));
+        case widgetList.WIDGET_CHECKBOX_GROUP.code:
+            return defineAsyncComponent(() => import("./widgets-setting/checkbox-group.vue"));
+        case widgetList.WIDGET_SELECT.code:
+            return defineAsyncComponent(() => import("./widgets-setting/select.vue"));
+        case widgetList.WIDGET_DATE_PICKER.code:
+            return defineAsyncComponent(() => import("./widgets-setting/date-picker.vue"));
+        case widgetList.WIDGET_TIME_PICKER.code:
+            return defineAsyncComponent(() => import("./widgets-setting/time-picker.vue"));
+        case widgetList.WIDGET_TIME_SELECT.code:
+            return defineAsyncComponent(() => import("./widgets-setting/time-select.vue"));
+        case widgetList.WIDGET_SWITCH.code:
+            return defineAsyncComponent(() => import("./widgets-setting/switch.vue"));
+        case widgetList.WIDGET_RATE.code:
+            return defineAsyncComponent(() => import("./widgets-setting/rate.vue"));
+        case widgetList.WIDGET_COLOR_PICKER.code:
+            return defineAsyncComponent(() => import("./widgets-setting/color-picker.vue"));
+        case widgetList.WIDGET_SLIDER.code:
+            return defineAsyncComponent(() => import("./widgets-setting/slider.vue"));
+        case widgetList.WIDGET_UPLOAD.code:
+            return defineAsyncComponent(() => import("./widgets-setting/upload.vue"));
+        case widgetList.WIDGET_HTML.code:
+            return defineAsyncComponent(() => import("./widgets-setting/html.vue"));
+        case widgetList.WIDGET_ALERT.code:
+            return defineAsyncComponent(() => import("./widgets-setting/alert.vue"));
+        case widgetList.WIDGET_DIVIDER.code:
+            return defineAsyncComponent(() => import("./widgets-setting/divider.vue"));
         default:
             return null;
     }

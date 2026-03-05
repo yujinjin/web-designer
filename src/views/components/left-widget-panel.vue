@@ -3,34 +3,14 @@
         <el-tabs model-value="first">
             <el-tab-pane label="组件库" name="first">
                 <div class="tab-content">
-                    <el-collapse :model-value="['1', '2', '3']">
-                        <el-collapse-item title="容器" name="1">
-                            <div :ref="el => (widgetGroupRefs[0] = el as HTMLDivElement)" class="widget-group">
-                                <div class="widget-item" data-widget-type="grid">
-                                    <el-button :icon="Grid">栅格</el-button>
-                                </div>
-                                <div class="widget-item" data-widget-type="table">
-                                    <el-button :icon="Notebook">表格</el-button>
-                                </div>
-                            </div>
-                        </el-collapse-item>
-                        <el-collapse-item title="基础表单" name="2">
-                            <div :ref="el => (widgetGroupRefs[1] = el as HTMLDivElement)" class="widget-group">
-                                <div class="widget-item" data-widget-type="text">
-                                    <el-button :icon="Edit">输入框</el-button>
-                                </div>
-                                <div class="widget-item" data-type="radio">
-                                    <el-button :icon="CircleCheckFilled">单选框</el-button>
-                                </div>
-                            </div>
-                        </el-collapse-item>
-                        <el-collapse-item title="高级表单" name="3">
-                            <div :ref="el => (widgetGroupRefs[2] = el as HTMLDivElement)" class="widget-group">
-                                <div class="widget-item" data-widget-type="file">
-                                    <el-button :icon="UploadFilled">文件上传</el-button>
-                                </div>
-                                <div class="widget-item" data-widget-type="textarea">
-                                    <el-button :icon="DocumentAdd">富文本框</el-button>
+                    <el-collapse :model-value="widgetGroup.map((item, index) => index)">
+                        <el-collapse-item v-for="(groupItem, index) in widgetGroup" :key="index" :title="groupItem.groupName" :name="index">
+                            <div :ref="el => (widgetGroupRefs[index] = el as HTMLDivElement)" class="widget-group">
+                                <div v-for="widgetItem in groupItem.children" :key="widgetItem.code" class="widget-item" :data-widget-type="widgetItem.code">
+                                    <el-button>
+                                        <i :class="widgetItem.icon" />
+                                        {{ widgetItem.name }}
+                                    </el-button>
                                 </div>
                             </div>
                         </el-collapse-item>
@@ -44,13 +24,15 @@
     </div>
 </template>
 <script setup lang="ts">
-import { Grid, Notebook, Edit, CircleCheckFilled, UploadFilled, DocumentAdd } from "@element-plus/icons-vue";
 import { onMounted, shallowRef, onUnmounted } from "vue";
 import Sortable from "sortablejs";
+import { getWidgetGroup } from "@/views/composables/widget-manage";
 
 const widgetGroupRefs = shallowRef<(HTMLDivElement | null)[]>([]);
 
 const sortableInstances = shallowRef<Sortable[]>([]);
+
+const widgetGroup = getWidgetGroup();
 
 onMounted(() => {
     widgetGroupRefs.value.forEach(el => {
@@ -135,6 +117,11 @@ onUnmounted(() => {
 
                     .el-button {
                         width: 100%;
+                    }
+
+                    i {
+                        font-size: 16px;
+                        margin-right: 4px;
                     }
                 }
             }

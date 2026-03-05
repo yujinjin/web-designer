@@ -1,5 +1,5 @@
 <template>
-    <div class="widgets-setting-text">
+    <div class="widgets-setting-slider">
         <el-form :model="settingData" label-width="100px" label-position="left">
             <el-collapse :model-value="['1', '2', '3', '4']">
                 <el-collapse-item title="基本属性" name="1">
@@ -28,77 +28,82 @@
                             <el-radio-button value="top">上</el-radio-button>
                         </el-radio-group>
                     </el-form-item>
-                    <el-form-item label="输入类型" prop="type">
-                        <el-radio-group :model-value="settingData.type" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'type', value)">
-                            <el-radio-button value="text">文本</el-radio-button>
-                            <el-radio-button value="password">密码</el-radio-button>
-                            <el-radio-button value="textarea">多行文本</el-radio-button>
-                        </el-radio-group>
-                    </el-form-item>
-                    <el-form-item label="占位符" prop="placeholder">
-                        <el-input
-                            :model-value="settingData.placeholder"
-                            placeholder="请输入占位符"
-                            maxlength="30"
-                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'placeholder', value)"
-                        />
-                    </el-form-item>
                     <el-form-item label="控制属性" prop="control">
                         <el-checkbox-group :model-value="settingData.control" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'control', value)">
                             <el-checkbox value="disabled">禁用</el-checkbox>
                             <el-checkbox value="isShow">显示</el-checkbox>
-                            <el-checkbox value="readonly">只读</el-checkbox>
                         </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="默认值" prop="defaultValue">
-                        <el-input
+                        <el-input-number
                             :model-value="settingData.defaultValue"
                             placeholder="请输入默认值"
-                            maxlength="30"
                             @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'defaultValue', value)"
                         />
                     </el-form-item>
-                    <el-form-item v-if="settingData.type === 'textarea'" label="行数" prop="rows">
+                    <el-form-item label="最小值" prop="min">
                         <el-input-number
-                            :model-value="settingData.rows"
-                            placeholder="请输入行数"
-                            :min="1"
-                            :max="10"
-                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'rows', value)"
+                            :model-value="settingData.min"
+                            placeholder="请输入最小值"
+                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'min', value)"
                         />
                     </el-form-item>
-                    <el-form-item v-if="settingData.type === 'textarea' || settingData.type === 'text'" label="显示字数统计" prop="showWordLimit">
+                    <el-form-item label="最大值" prop="max">
+                        <el-input-number
+                            :model-value="settingData.max"
+                            placeholder="请输入最大值"
+                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'max', value)"
+                        />
+                    </el-form-item>
+                    <el-form-item label="步长" prop="step">
+                        <el-input-number
+                            :model-value="settingData.step"
+                            placeholder="请输入步长"
+                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'step', value)"
+                        />
+                    </el-form-item>
+                    <el-form-item label="显示输入框" prop="showInput">
+                        <el-switch :model-value="!!settingData.showInput" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'showInput', value)" />
+                    </el-form-item>
+                    <el-form-item v-if="settingData.showInput" label="输入框控制" prop="showInputControl">
                         <el-switch
-                            :model-value="!!settingData.showWordLimit"
-                            :active-value="true"
-                            :inactive-value="false"
-                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'showWordLimit', value)"
+                            :model-value="!!settingData.showInputControls"
+                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'showInputControl', value)"
                         />
                     </el-form-item>
-                    <el-form-item label="最大长度" prop="maxlength">
-                        <el-input-number
-                            :model-value="settingData.maxlength"
-                            placeholder="字符最大长度"
-                            :min="1"
-                            :max="100"
-                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'maxlength', value)"
+                    <el-form-item label="显示间断点" prop="showStops">
+                        <el-switch :model-value="!!settingData.showStops" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'showStops', value)" />
+                    </el-form-item>
+                    <el-form-item label="显示提示信息" prop="showTooltip">
+                        <el-switch :model-value="!!settingData.showTooltip" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'showTooltip', value)" />
+                    </el-form-item>
+                    <el-form-item label="开启范围选择" prop="range">
+                        <el-switch :model-value="!!settingData.range" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'range', value)" />
+                    </el-form-item>
+                    <el-form-item label="范围开始标签" prop="rangeStartLabel">
+                        <el-input
+                            :model-value="settingData.rangeStartLabel"
+                            placeholder="请输入范围开始标签"
+                            maxlength="30"
+                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'rangeStartLabel', value)"
                         />
                     </el-form-item>
-                    <el-form-item label="最小长度" prop="minlength">
-                        <el-input-number
-                            :model-value="settingData.minlength"
-                            placeholder="字符最小长度"
-                            :min="1"
-                            :max="100"
-                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'minlength', value)"
+                    <el-form-item label="范围结束标签" prop="rangeEndLabel">
+                        <el-input
+                            :model-value="settingData.rangeEndLabel"
+                            placeholder="请输入范围结束标签"
+                            maxlength="30"
+                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'rangeEndLabel', value)"
                         />
                     </el-form-item>
-                    <el-form-item label="是否可清空" prop="clearable">
-                        <el-switch
-                            :model-value="!!settingData.clearable"
-                            :active-value="true"
-                            :inactive-value="false"
-                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'clearable', value)"
+                    <el-form-item label="垂直模式" prop="vertical">
+                        <el-switch :model-value="!!settingData.vertical" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'vertical', value)" />
+                    </el-form-item>
+                    <el-form-item label="垂直高度" prop="height">
+                        <el-input
+                            :model-value="settingData.height"
+                            placeholder="请输入垂直高度"
+                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'height', value)"
                         />
                     </el-form-item>
                 </el-collapse-item>
@@ -119,41 +124,20 @@
                             @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'requiredMessage', value)"
                         />
                     </el-form-item>
-                    <el-form-item label="正则表达式" prop="regExp">
-                        <el-input
-                            :model-value="settingData.regExp"
-                            placeholder="请输入正则表达式"
-                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'regExp', value)"
-                        />
-                    </el-form-item>
-                    <el-form-item v-if="settingData.regExp" label="正则表达式提示" prop="regExpMessage">
-                        <el-input
-                            :model-value="settingData.regExpMessage"
-                            placeholder="请输入正则表达式提示"
-                            maxlength="50"
-                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'regExpMessage', value)"
-                        />
-                    </el-form-item>
                 </el-collapse-item>
-                <el-collapse-item v-if="settingData.type === 'text'" title="高级属性" name="3">
-                    <el-form-item label="formatter" prop="formatter">
-                        <el-button :icon="Edit" @click="showJsCodeEditorDialog('formatter')">编写代码</el-button>
-                        <div class="tips-text">格式化函数，用于格式化输入值。</div>
+                <el-collapse-item title="高级属性" name="3">
+                    <el-form-item v-if="settingData.showTooltip" label="formatTooltip" prop="formatTooltip">
+                        <el-button :icon="Edit" @click="showJsCodeEditorDialog('formatTooltip')">编写代码</el-button>
+                        <div class="tips-text">格式化提示信息</div>
                     </el-form-item>
-                    <el-form-item label="parser" prop="parser">
-                        <el-button :icon="Edit" @click="showJsCodeEditorDialog('parser')">编写代码</el-button>
-                        <div class="tips-text">解析函数，用于解析输入值。</div>
+                    <el-form-item label="格式化值" prop="formatValueText">
+                        <el-button :icon="Edit" @click="showJsCodeEditorDialog('formatValueText')">编写代码</el-button>
+                        <div class="tips-text">显示屏幕阅读器的 aria-valuenow 属性的格式</div>
                     </el-form-item>
                 </el-collapse-item>
                 <el-collapse-item title="事件" name="4">
                     <el-form-item label="onValidate" prop="onValidate">
                         <el-button :icon="Edit" @click="showJsCodeEditorDialog('onValidate')">编写代码</el-button>
-                    </el-form-item>
-                    <el-form-item label="onBlur" prop="onBlur">
-                        <el-button :icon="Edit" @click="showJsCodeEditorDialog('onBlur')">编写代码</el-button>
-                    </el-form-item>
-                    <el-form-item label="onFocus" prop="onFocus">
-                        <el-button :icon="Edit" @click="showJsCodeEditorDialog('onFocus')">编写代码</el-button>
                     </el-form-item>
                     <el-form-item label="onInput" prop="onInput">
                         <el-button :icon="Edit" @click="showJsCodeEditorDialog('onInput')">编写代码</el-button>
@@ -171,14 +155,14 @@
 import { ref, inject, type PropType } from "vue";
 import { Edit } from "@element-plus/icons-vue";
 import jsCodeEditorDialog from "../js-code-editor-dialog.vue";
-import { type WidgetTextData, type ChangeSelectedWidgetSettingDataFun } from "@/views/composables/types";
+import { type WidgetSliderData, type ChangeSelectedWidgetSettingDataFun } from "@/views/composables/types";
 import { usePropNameValidator } from "@/views/composables/validator";
-import { useSettingDataValueChange } from "@/views/composables/widgets/text";
+import { useSettingDataValueChange } from "@/views/composables/widgets/slider";
 import useJsCodeEditor from "@/views/composables/js-code-editor";
 
 const props = defineProps({
     settingData: {
-        type: Object as PropType<WidgetTextData["settingData"]>,
+        type: Object as PropType<WidgetSliderData["settingData"]>,
         required: true
     }
 });
@@ -196,7 +180,7 @@ const { isShowJsCodeEditorDialog, eventValue, showJsCodeEditorDialog, closeJsCod
 );
 </script>
 <style lang="scss" scoped>
-.widgets-setting-text {
+.widgets-setting-slider {
     height: 100%;
 
     .tips-text {

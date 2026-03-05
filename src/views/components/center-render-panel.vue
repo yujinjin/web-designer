@@ -28,7 +28,18 @@
                                 <el-icon><Bottom /></el-icon>
                                 <el-icon><Delete /></el-icon>
                             </div>
+                            <!-- eslint-disable-next-line vue/no-v-html -->
+                            <div v-if="item.code === widgetList.WIDGET_HTML.code" class="html-contents" v-html="item.settingData?.defaultValue"></div>
+                            <div v-else-if="item.code === widgetList.WIDGET_ALERT.code" class="alert-box">
+                                <el-alert v-bind="getWidgetComponentAttributes(item, formData[item.id])" />
+                            </div>
+                            <div v-else-if="item.code === widgetList.WIDGET_DIVIDER.code" class="divider-box">
+                                <el-divider v-bind="getWidgetComponentAttributes(item, formData[item.id])">
+                                    {{ item.defaultValue }}
+                                </el-divider>
+                            </div>
                             <el-form-item
+                                v-else
                                 v-bind="item.formAttributes"
                                 :rules="
                                     useFormItemRules(
@@ -37,7 +48,7 @@
                                             requiredMessage: item.settingData?.requiredMessage,
                                             regExp: item.settingData?.regExp,
                                             regExpMessage: item.settingData?.regExpMessage,
-                                            validate: item.componentEvents?.validate
+                                            validate: item.componentFunctions?.validate
                                         },
                                         formData,
                                         widgetFormData!
@@ -45,11 +56,84 @@
                                 "
                             >
                                 <el-input
-                                    v-if="item.code === 'text'"
+                                    v-if="item.code === widgetList.WIDGET_TEXT.code"
                                     v-model="formData[item.id]"
-                                    v-bind="item.componentAttributes"
-                                    v-on="useTextEvents(item as WidgetTextData, formData, widgetFormData!)"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
                                 />
+                                <el-input-number
+                                    v-else-if="item.code === widgetList.WIDGET_INPUT_NUMBER.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
+                                />
+                                <el-radio-group
+                                    v-else-if="item.code === widgetList.WIDGET_RADIO_GROUP.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
+                                />
+                                <el-checkbox-group
+                                    v-else-if="item.code === widgetList.WIDGET_CHECKBOX_GROUP.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
+                                />
+                                <el-select
+                                    v-else-if="item.code === widgetList.WIDGET_SELECT.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
+                                />
+                                <el-date-picker
+                                    v-else-if="item.code === widgetList.WIDGET_DATE_PICKER.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
+                                />
+                                <el-time-picker
+                                    v-else-if="item.code === widgetList.WIDGET_TIME_PICKER.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                />
+                                <el-time-select
+                                    v-else-if="item.code === widgetList.WIDGET_TIME_SELECT.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
+                                />
+                                <el-switch
+                                    v-else-if="item.code === widgetList.WIDGET_SWITCH.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
+                                />
+                                <el-rate
+                                    v-else-if="item.code === widgetList.WIDGET_RATE.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
+                                />
+                                <el-color-picker
+                                    v-else-if="item.code === widgetList.WIDGET_COLOR_PICKER.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
+                                />
+                                <el-slider
+                                    v-else-if="item.code === widgetList.WIDGET_SLIDER.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
+                                />
+                                <el-upload
+                                    v-else-if="item.code === widgetList.WIDGET_UPLOAD.code"
+                                    v-model="formData[item.id]"
+                                    v-bind="getWidgetComponentAttributes(item, formData[item.id])"
+                                    v-on="getWidgetComponentEvents(item, formData, widgetFormData!)"
+                                >
+                                    <el-button type="primary">点击上传</el-button>
+                                </el-upload>
                             </el-form-item>
                         </div>
                     </template>
@@ -63,9 +147,9 @@
 import { type Ref, inject, useTemplateRef, onMounted, shallowRef, onUnmounted } from "vue";
 import { View, Upload, Download, Delete, Rank, Top, Bottom, Hide } from "@element-plus/icons-vue";
 import Sortable from "sortablejs";
-import { type WidgetBaseData, type WidgetFormData, type WidgetTextData } from "@/views/composables/types";
+import { type WidgetFormData } from "@/views/composables/types";
 import { useFormRenderData, useFormItemRules } from "@/views/composables/widgets/form";
-import { WIDGET_TEXT, useEvents as useTextEvents, useCreateDefaultData as useTextCreateDefaultData } from "@/views/composables/widgets/text";
+import { getWidgetComponentAttributes, getWidgetComponentEvents, getWidgetList } from "@/views/composables/widget-manage";
 
 // 获取注入的表单数据
 const widgetFormData = inject<WidgetFormData>("widgetFormData");
@@ -77,7 +161,7 @@ const selectedWigetId = inject<Ref<string | null>>("selectedWigetId");
 const changeSelectedWidgetId = inject<(id: string | null) => void>("changeSelectedWidgetId");
 
 // 获取注入的插入组件的函数
-const insertWidget = inject<(widgetData: WidgetBaseData, newIndex: number) => void>("insertWidget");
+const insertWidgetDefaultData = inject<(code: string, newIndex: number) => void>("insertWidgetDefaultData");
 
 // 获取注入的删除组件的函数
 // const deleteWidget = inject<(id: string) => void>("deleteWidget");
@@ -89,6 +173,9 @@ const formData = useFormRenderData(widgetFormData!);
 const dropContainerRef = useTemplateRef<HTMLDivElement>("dropContainerRef");
 
 const sortableInstance = shallowRef<Sortable | null>(null);
+
+const widgetList = getWidgetList();
+
 // 初始化排序插件
 onMounted(() => {
     if (dropContainerRef.value) {
@@ -118,11 +205,7 @@ onMounted(() => {
                     return;
                 }
                 // 根据组件类型添加对应的组件
-                if (widgetType === WIDGET_TEXT.code) {
-                    // 这里可以根据 widgetType 生成不同类型的组件
-                    // 目前默认生成文本组件
-                    insertWidget?.(useTextCreateDefaultData(), evt.newIndex as number);
-                }
+                insertWidgetDefaultData!(widgetType, evt.newIndex);
             },
             onUpdate: (evt: Sortable.SortableEvent) => {
                 // const originalEl = evt.original;
@@ -164,6 +247,7 @@ onUnmounted(() => {
     .render-panel {
         flex: 1;
         overflow-x: hidden;
+        padding: 12px;
 
         :deep(.el-form) {
             height: 100%;
@@ -207,6 +291,12 @@ onUnmounted(() => {
                         gap: 4px;
                         color: #fff;
                         cursor: pointer;
+                    }
+
+                    .html-contents,
+                    .alert-box {
+                        padding: 12px 0px;
+                        font-size: 14px;
                     }
 
                     &.selected {
