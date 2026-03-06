@@ -11,7 +11,7 @@ export const WIDGET_UPLOAD = {
 
 // 创建默认数据
 export function useCreateDefaultData(): WidgetUploadData {
-    const id = WIDGET_UPLOAD.code + "_" + randomId();
+    const id = WIDGET_UPLOAD.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_UPLOAD.code,

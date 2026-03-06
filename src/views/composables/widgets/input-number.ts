@@ -10,7 +10,7 @@ export const WIDGET_INPUT_NUMBER = {
 
 // 创建默认输入数字数据
 export function useCreateDefaultData(): WidgetInputNumberData {
-    const id = WIDGET_INPUT_NUMBER.code + "_" + randomId();
+    const id = WIDGET_INPUT_NUMBER.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id: id,
         code: WIDGET_INPUT_NUMBER.code,

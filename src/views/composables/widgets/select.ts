@@ -10,7 +10,7 @@ export const WIDGET_SELECT = {
 
 // 创建默认数据
 export function useCreateDefaultData(): WidgetSelectData {
-    const id = WIDGET_SELECT.code + "_" + randomId();
+    const id = WIDGET_SELECT.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_SELECT.code,

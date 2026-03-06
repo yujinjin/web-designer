@@ -10,7 +10,7 @@ export const WIDGET_CHECKBOX_GROUP = {
 
 // 创建默认复选框组数据
 export function useCreateDefaultData(): WidgetCheckboxGroupData {
-    const id = WIDGET_CHECKBOX_GROUP.code + "_" + randomId();
+    const id = WIDGET_CHECKBOX_GROUP.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id: id,
         code: WIDGET_CHECKBOX_GROUP.code,

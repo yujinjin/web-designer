@@ -10,7 +10,7 @@ export const WIDGET_RADIO_GROUP = {
 
 // 创建默认单选框数据
 export function useCreateDefaultData(): WidgetRadioGroupData {
-    const id = WIDGET_RADIO_GROUP.code + "_" + randomId();
+    const id = WIDGET_RADIO_GROUP.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id: id,
         code: WIDGET_RADIO_GROUP.code,

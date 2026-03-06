@@ -25,13 +25,18 @@ const widgetFormData = reactive<WidgetFormData>(useCreateDefaultData());
 const selectedWigetId = ref<string | null>(null);
 
 // 组件管理
-const { changeSelectedWidgetId, changeSelectedWidgetSettingData, changeFormSettingData, insertWidgetDefaultData, deleteWidget, clearWidgets } = useWidgetManage(widgetFormData, selectedWigetId);
+const { changeSelectedWidgetId, changeSelectedWidgetSettingData, changeFormSettingData, insertWidgetDefaultData, updateWidgetOrder, copyWidgetData, deleteWidget, clearWidgets } = useWidgetManage(
+    widgetFormData,
+    selectedWigetId
+);
 
 // 提供表单数据、改变表单数据、改变选中的组件的设置数据、选中的组件id、改变选中的组件id
 provide("widgetFormData", readonly(widgetFormData));
 provide("changeFormSettingData", changeFormSettingData);
 provide("changeSelectedWidgetSettingData", changeSelectedWidgetSettingData);
 provide("insertWidgetDefaultData", insertWidgetDefaultData);
+provide("updateWidgetOrder", updateWidgetOrder);
+provide("copyWidgetData", copyWidgetData);
 provide("deleteWidget", deleteWidget);
 provide("selectedWigetId", readonly(selectedWigetId));
 provide("changeSelectedWidgetId", changeSelectedWidgetId);

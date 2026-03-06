@@ -1,4 +1,5 @@
 import { type Reactive, type Ref } from "vue";
+import { randomId } from "@yujinjin/utils";
 import { useSettingDataValueChange } from "@/views/composables/widgets/form";
 import {
     type WidgetFormData,
@@ -156,11 +157,38 @@ export default function useWidgetManage(widgetFormData: Reactive<WidgetFormData>
         widgetFormData.widgets.splice(newIndex, 0, widgetData);
     };
 
+    // 复制组件数据
+    const copyWidgetData = function (newIndex: number, copyIndex: number) {
+        const newWidgetData = JSON.parse(JSON.stringify(widgetFormData.widgets[copyIndex]));
+        const id = newWidgetData.id.substring(0, newWidgetData.id.lastIndexOf("_") + 1) + randomId();
+        newWidgetData.id = id;
+        newWidgetData.propName = id;
+        newWidgetData.settingData.propName = id;
+        if (newWidgetData.formAttributes) {
+            newWidgetData.formAttributes.prop = id;
+        }
+        widgetFormData.widgets.splice(newIndex, 0, newWidgetData);
+    };
+
+    // 更新组件的顺序
+    const updateWidgetOrder = function (oldIndex: number, newIndex: number) {
+        widgetFormData.widgets.splice(newIndex, 0, widgetFormData.widgets.splice(oldIndex, 1)[0]);
+    };
+
     // 删除组件
     const deleteWidget = function (widgetId: string) {
         const findIndex = widgetFormData.widgets.findIndex((item: any) => item.id === widgetId);
         if (findIndex !== -1) {
             widgetFormData.widgets.splice(findIndex, 1);
+            if (selectedWigetId.value === widgetId) {
+                if (widgetFormData.widgets.length === 0) {
+                    selectedWigetId.value = null;
+                } else if (findIndex >= widgetFormData.widgets.length) {
+                    selectedWigetId.value = widgetFormData.widgets[findIndex - 1].id;
+                } else {
+                    selectedWigetId.value = widgetFormData.widgets[findIndex].id;
+                }
+            }
         }
     };
 
@@ -174,6 +202,8 @@ export default function useWidgetManage(widgetFormData: Reactive<WidgetFormData>
         changeSelectedWidgetSettingData,
         changeFormSettingData,
         insertWidgetDefaultData,
+        updateWidgetOrder,
+        copyWidgetData,
         deleteWidget,
         clearWidgets
     };

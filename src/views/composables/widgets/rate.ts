@@ -10,7 +10,7 @@ export const WIDGET_RATE = {
 
 // 创建默认数据
 export function useCreateDefaultData(): WidgetRateData {
-    const id = WIDGET_RATE.code + "_" + randomId();
+    const id = WIDGET_RATE.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_RATE.code,
@@ -19,6 +19,8 @@ export function useCreateDefaultData(): WidgetRateData {
         defaultValue: null,
         propName: id,
         formAttributes: {
+            prop: id,
+            required: false,
             label: WIDGET_RATE.name,
             labelPosition: "left"
         },

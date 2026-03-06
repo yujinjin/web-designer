@@ -11,7 +11,7 @@
                 <div ref="dropContainerRef" class="drop-container">
                     <template v-if="widgetFormData!.widgets.length > 0">
                         <div
-                            v-for="item in widgetFormData!.widgets"
+                            v-for="(item, index) in widgetFormData!.widgets"
                             :key="item.id"
                             class="drag-item"
                             :class="{ selected: item.id === selectedWigetId }"
@@ -19,14 +19,15 @@
                         >
                             <div class="drag-box">
                                 <el-icon><Rank /></el-icon>
+                                <el-icon v-if="item.isShow" title="显示状态"><View /></el-icon>
+                                <el-icon v-else title="隐藏状态"><Hide /></el-icon>
                                 <span>{{ item.name }}</span>
                             </div>
                             <div class="action-box">
-                                <el-icon v-if="item.isShow"><View /></el-icon>
-                                <el-icon v-else><Hide /></el-icon>
-                                <el-icon><Top /></el-icon>
-                                <el-icon><Bottom /></el-icon>
-                                <el-icon><Delete /></el-icon>
+                                <el-icon title="复制组件" @click.stop="copyWidgetData?.(index + 1, index)"><CopyDocument /></el-icon>
+                                <el-icon v-if="index > 0" title="上移" @click.stop="updateWidgetOrder?.(index, index - 1)"><Top /></el-icon>
+                                <el-icon v-if="index < widgetFormData!.widgets.length - 1" title="下移" @click.stop="updateWidgetOrder?.(index, index + 1)"><Bottom /></el-icon>
+                                <el-icon title="删除组件" @click.stop="deleteWidget?.(item.id)"><Delete /></el-icon>
                             </div>
                             <!-- eslint-disable-next-line vue/no-v-html -->
                             <div v-if="item.code === widgetList.WIDGET_HTML.code" class="html-contents" v-html="item.settingData?.defaultValue"></div>
@@ -145,7 +146,7 @@
 </template>
 <script setup lang="ts">
 import { type Ref, inject, useTemplateRef, onMounted, shallowRef, onUnmounted } from "vue";
-import { View, Upload, Download, Delete, Rank, Top, Bottom, Hide } from "@element-plus/icons-vue";
+import { View, Upload, Download, Delete, Rank, Top, Bottom, Hide, CopyDocument } from "@element-plus/icons-vue";
 import Sortable from "sortablejs";
 import { type WidgetFormData } from "@/views/composables/types";
 import { useFormRenderData, useFormItemRules } from "@/views/composables/widgets/form";
@@ -163,8 +164,14 @@ const changeSelectedWidgetId = inject<(id: string | null) => void>("changeSelect
 // 获取注入的插入组件的函数
 const insertWidgetDefaultData = inject<(code: string, newIndex: number) => void>("insertWidgetDefaultData");
 
+// 获取注入的更新组件的顺序的函数
+const updateWidgetOrder = inject<(oldIndex: number, newIndex: number) => void>("updateWidgetOrder");
+
+// 获取注入的复制组件的函数
+const copyWidgetData = inject<(newIndex: number, copyIndex: number) => void>("copyWidgetData");
+
 // 获取注入的删除组件的函数
-// const deleteWidget = inject<(id: string) => void>("deleteWidget");
+const deleteWidget = inject<(id: string) => void>("deleteWidget");
 
 // 获取注入的表单数据的渲染数据
 const formData = useFormRenderData(widgetFormData!);
@@ -217,6 +224,10 @@ onMounted(() => {
                 // const originalEl = evt.original;
                 // const cloneEl = evt.clone;
                 // cloneEl.innerHTML = originalEl.innerHTML;
+                // 更新 dataList 数组的顺序
+                if (evt.oldIndex !== undefined && evt.newIndex !== undefined) {
+                    updateWidgetOrder!(evt.oldIndex, evt.newIndex);
+                }
                 console.info("onEnd: center render panel");
             }
         });
@@ -299,10 +310,11 @@ onUnmounted(() => {
                         font-size: 14px;
                     }
 
-                    &.selected {
+                    &.selected,
+                    &:hover {
                         width: 100%;
                         display: inline-block;
-                        border: 2px solid var(--el-color-primary);
+                        background-color: var(--el-color-primary-light-9);
 
                         .drag-box {
                             display: flex;
@@ -310,6 +322,10 @@ onUnmounted(() => {
                         .action-box {
                             display: flex;
                         }
+                    }
+
+                    &.selected {
+                        border-left: 2px solid var(--el-color-primary);
                     }
                 }
             }

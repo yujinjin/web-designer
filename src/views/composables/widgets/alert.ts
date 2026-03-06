@@ -10,7 +10,7 @@ export const WIDGET_ALERT = {
 
 // 创建默认数据
 export function useCreateDefaultData(): WidgetAlertData {
-    const id = WIDGET_ALERT.code + "_" + randomId();
+    const id = WIDGET_ALERT.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_ALERT.code,

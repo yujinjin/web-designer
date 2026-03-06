@@ -10,7 +10,7 @@ export const WIDGET_TIME_SELECT = {
 
 // 创建默认数据
 export function useCreateDefaultData(): WidgetTimeSelectData {
-    const id = WIDGET_TIME_SELECT.code + "_" + randomId();
+    const id = WIDGET_TIME_SELECT.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_TIME_SELECT.code,

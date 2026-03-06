@@ -7,7 +7,7 @@ export const WIDGET_FORM_CODE = "form";
 
 export function useCreateDefaultData(): WidgetFormData {
     return {
-        id: WIDGET_FORM_CODE + "_" + randomId(),
+        id: WIDGET_FORM_CODE.replace(/-/g, "_") + "_" + randomId(),
         code: WIDGET_FORM_CODE,
         formAttributes: {
             inline: false,

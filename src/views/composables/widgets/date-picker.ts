@@ -10,7 +10,7 @@ export const WIDGET_DATE_PICKER = {
 
 // 创建默认数据
 export function useCreateDefaultData(): WidgetDatePickerData {
-    const id = WIDGET_DATE_PICKER.code + "_" + randomId();
+    const id = WIDGET_DATE_PICKER.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_DATE_PICKER.code,
@@ -19,6 +19,8 @@ export function useCreateDefaultData(): WidgetDatePickerData {
         defaultValue: null,
         propName: id,
         formAttributes: {
+            prop: id,
+            required: false,
             label: WIDGET_DATE_PICKER.name,
             labelPosition: "left"
         },

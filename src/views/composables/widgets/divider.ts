@@ -10,7 +10,7 @@ export const WIDGET_DIVIDER = {
 
 // 创建默认数据
 export function useCreateDefaultData(): WidgetDividerData {
-    const id = WIDGET_DIVIDER.code + "_" + randomId();
+    const id = WIDGET_DIVIDER.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_DIVIDER.code,

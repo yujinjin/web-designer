@@ -10,7 +10,7 @@ export const WIDGET_HTML = {
 
 // 创建默认数据
 export function useCreateDefaultData(): WidgetHTMLData {
-    const id = WIDGET_HTML.code + "_" + randomId();
+    const id = WIDGET_HTML.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_HTML.code,

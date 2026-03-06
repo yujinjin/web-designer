@@ -10,7 +10,7 @@ export const WIDGET_TEXT = {
 
 // 创建默认文本框数据
 export function useCreateDefaultData(): WidgetTextData {
-    const id = WIDGET_TEXT.code + "_" + randomId();
+    const id = WIDGET_TEXT.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id: id,
         code: WIDGET_TEXT.code,

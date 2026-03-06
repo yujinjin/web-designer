@@ -10,7 +10,7 @@ export const WIDGET_COLOR_PICKER = {
 
 // 创建默认数据
 export function useCreateDefaultData(): WidgetColorPickerData {
-    const id = WIDGET_COLOR_PICKER.code + "_" + randomId();
+    const id = WIDGET_COLOR_PICKER.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_COLOR_PICKER.code,

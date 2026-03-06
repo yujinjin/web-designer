@@ -11,7 +11,7 @@ export const WIDGET_SLIDER = {
 
 // 创建默认数据
 export function useCreateDefaultData(): WidgetSliderData {
-    const id = WIDGET_SLIDER.code + "_" + randomId();
+    const id = WIDGET_SLIDER.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_SLIDER.code,
@@ -49,13 +49,11 @@ export function useCreateDefaultData(): WidgetSliderData {
             showInputControls: false,
             showTooltip: true,
             showStops: false,
-
             range: false,
             vertical: false,
             height: null,
             rangeStartLabel: null,
             rangeEndLabel: null,
-
             placement: "top",
             marks: null,
             persistent: null,

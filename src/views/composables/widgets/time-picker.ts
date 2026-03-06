@@ -11,7 +11,7 @@ export const WIDGET_TIME_PICKER = {
 
 // 创建默认数据
 export function useCreateDefaultData(): WidgetTimePickerData {
-    const id = WIDGET_TIME_PICKER.code + "_" + randomId();
+    const id = WIDGET_TIME_PICKER.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_TIME_PICKER.code,

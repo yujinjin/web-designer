@@ -10,7 +10,7 @@ export const WIDGET_SWITCH = {
 
 // 创建默认开关组件数据
 export function useCreateDefaultData(): WidgetSwitchData {
-    const id = WIDGET_SWITCH.code + "_" + randomId();
+    const id = WIDGET_SWITCH.code.replace(/-/g, "_") + "_" + randomId();
     return {
         id,
         code: WIDGET_SWITCH.code,
