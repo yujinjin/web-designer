@@ -8,11 +8,12 @@
         </div>
         <div class="render-panel">
             <el-form :model="formData" v-bind="widgetFormData!.formAttributes">
-                <div ref="dropContainerRef" class="drop-container">
+                <el-row ref="dropContainerRef" class="drop-container">
                     <template v-if="widgetFormData!.widgets.length > 0">
-                        <div
+                        <el-col
                             v-for="(item, index) in widgetFormData!.widgets"
                             :key="item.id"
+                            :span="24"
                             class="drag-item"
                             :class="{ selected: item.id === selectedWigetId }"
                             @click.stop.prevent="changeSelectedWidgetId?.(item.id)"
@@ -136,17 +137,18 @@
                                     <el-button type="primary">点击上传</el-button>
                                 </el-upload>
                             </el-form-item>
-                        </div>
+                        </el-col>
                     </template>
                     <div v-else class="empty-tip">请从左侧列表中选择一个组件, 然后用鼠标拖动组件放置于此处.</div>
-                </div>
+                </el-row>
             </el-form>
         </div>
     </div>
 </template>
 <script setup lang="ts">
-import { type Ref, inject, useTemplateRef, onMounted, shallowRef, onUnmounted } from "vue";
+import { type Ref, inject, onMounted, shallowRef, onUnmounted, ref } from "vue";
 import { View, Upload, Download, Delete, Rank, Top, Bottom, Hide, CopyDocument } from "@element-plus/icons-vue";
+import { type RowInstance } from "element-plus";
 import Sortable from "sortablejs";
 import { type WidgetFormData } from "@/views/composables/types";
 import { useFormRenderData, useFormItemRules } from "@/views/composables/widgets/form";
@@ -177,7 +179,7 @@ const deleteWidget = inject<(id: string) => void>("deleteWidget");
 const formData = useFormRenderData(widgetFormData!);
 
 // 获取注入的表单数据的渲染数据
-const dropContainerRef = useTemplateRef<HTMLDivElement>("dropContainerRef");
+const dropContainerRef = ref<RowInstance>();
 
 const sortableInstance = shallowRef<Sortable | null>(null);
 
@@ -186,7 +188,7 @@ const widgetList = getWidgetList();
 // 初始化排序插件
 onMounted(() => {
     if (dropContainerRef.value) {
-        sortableInstance.value = new Sortable(dropContainerRef.value, {
+        sortableInstance.value = new Sortable(dropContainerRef.value.$el, {
             animation: 300,
             group: { name: "dragGroup", put: true, pull: true },
             sort: true,
@@ -265,6 +267,7 @@ onUnmounted(() => {
 
             .drop-container {
                 height: 100%;
+                align-content: flex-start;
 
                 .drag-item {
                     position: relative;
@@ -325,7 +328,7 @@ onUnmounted(() => {
                     }
 
                     &.selected {
-                        border-left: 2px solid var(--el-color-primary);
+                        border-left: 3px solid var(--el-color-primary);
                     }
                 }
             }
@@ -333,6 +336,7 @@ onUnmounted(() => {
 
         .empty-tip {
             height: 100%;
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;

@@ -168,6 +168,7 @@ export default function useWidgetManage(widgetFormData: Reactive<WidgetFormData>
             newWidgetData.formAttributes.prop = id;
         }
         widgetFormData.widgets.splice(newIndex, 0, newWidgetData);
+        changeSelectedWidgetId(id);
     };
 
     // 更新组件的顺序
@@ -213,23 +214,23 @@ export default function useWidgetManage(widgetFormData: Reactive<WidgetFormData>
 export const getWidgetGroup = function () {
     return [
         {
-            groupName: "布局字段",
+            groupName: "布局型组件",
             children: []
         },
         {
-            groupName: "输入字段",
+            groupName: "输入型组件",
             children: [WIDGET_TEXT, WIDGET_INPUT_NUMBER]
         },
         {
-            groupName: "选择字段",
+            groupName: "选择型组件",
             children: [WIDGET_SELECT, WIDGET_RADIO_GROUP, WIDGET_CHECKBOX_GROUP, WIDGET_SWITCH, WIDGET_SLIDER, WIDGET_UPLOAD]
         },
         {
-            groupName: "日期时间字段",
+            groupName: "日期时间型组件",
             children: [WIDGET_DATE_PICKER, WIDGET_TIME_PICKER, WIDGET_TIME_SELECT]
         },
         {
-            groupName: "其他字段",
+            groupName: "其他",
             children: [WIDGET_COLOR_PICKER, WIDGET_RATE, WIDGET_HTML, WIDGET_ALERT, WIDGET_DIVIDER]
         }
     ];
@@ -290,7 +291,6 @@ export const getWidgetComponentAttributes = function (widgetData: WidgetBaseData
             return useAlertAttributes(widgetData as WidgetAlertData);
         case WIDGET_DIVIDER.code:
             return useDividerAttributes(widgetData as WidgetDividerData);
-            break;
     }
     return useTextAttributes(widgetData as WidgetTextData);
 };

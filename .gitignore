@@ -19,3 +19,12 @@ package-lock.json
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code 项目规则随团队共享，其他本地/生成配置继续忽略。
+.claude/
+.trae/
+openspec/
+.codex/
+CLAUDE.md
+docs/
+.superpowers/

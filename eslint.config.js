@@ -206,6 +206,6 @@ export default defineConfig(
     },
     /** 忽略文件 */
     {
-        ignores: [".vscode/*", "node_modules", "dist", ".husky", "public", ".idea/"]
+        ignores: [".vscode/*", "node_modules", "dist", ".husky", "public", ".idea/", ".claude/*", ".superpowers/*", ".codex/*"]
     }
 );
