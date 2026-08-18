@@ -106,6 +106,7 @@ export function useSettingDataValueChange(data: WidgetTimePickerData, fileName: 
         case "isRange":
             data.componentAttributes.isRange = value;
             data.defaultValue = null;
+            data.settingData.defaultValue = null;
             break;
         case "placeholder":
         case "startPlaceholder":

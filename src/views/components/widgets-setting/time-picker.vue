@@ -36,7 +36,13 @@
                         </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="默认值" prop="defaultValue">
-                        <el-time-picker :model-value="settingData.defaultValue" :is-range="!!settingData.isRange" :value-format="settingData.valueFormat || 'HH:mm:ss'" placeholder="选择时间默认值" />
+                        <el-time-picker
+                            :model-value="settingData.defaultValue"
+                            :is-range="!!settingData.isRange"
+                            :value-format="settingData.valueFormat || 'HH:mm:ss'"
+                            placeholder="选择时间默认值"
+                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'defaultValue', value)"
+                        />
                     </el-form-item>
                     <el-form-item label="是否范围选择" prop="isRange">
                         <el-checkbox :model-value="!!settingData.isRange" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'isRange', value)">

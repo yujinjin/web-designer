@@ -36,7 +36,13 @@
                         </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="默认值" prop="defaultValue">
-                        <el-date-picker :model-value="settingData.defaultValue" :type="settingData.type" :value-format="settingData.valueFormat || 'YYYY-MM-DD'" placeholder="选择日期默认值" />
+                        <el-date-picker
+                            :model-value="settingData.defaultValue"
+                            :type="settingData.type"
+                            :value-format="settingData.valueFormat || 'YYYY-MM-DD'"
+                            placeholder="选择日期默认值"
+                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'defaultValue', value)"
+                        />
                     </el-form-item>
                     <el-form-item label="日期类型" prop="type">
                         <el-select :model-value="settingData.type" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'type', value)">

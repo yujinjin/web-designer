@@ -36,8 +36,8 @@
                     </el-form-item>
                     <el-form-item label="默认值" prop="defaultValue">
                         <el-radio-group :model-value="!!settingData.defaultValue" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'defaultValue', value)">
-                            <el-radio-button value="true">开启</el-radio-button>
-                            <el-radio-button value="false">关闭</el-radio-button>
+                            <el-radio-button :value="true">开启</el-radio-button>
+                            <el-radio-button :value="false">关闭</el-radio-button>
                         </el-radio-group>
                     </el-form-item>
                     <el-form-item label="开启文案" prop="activeText">

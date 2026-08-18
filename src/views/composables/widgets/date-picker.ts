@@ -116,6 +116,7 @@ export function useSettingDataValueChange(data: WidgetDatePickerData, fileName: 
             break;
         case "type":
             data.componentAttributes.type = value || "date";
+            data.defaultValue = null;
             data.settingData.defaultValue = null;
             break;
         case "placeholder":

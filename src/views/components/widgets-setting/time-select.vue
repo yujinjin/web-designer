@@ -43,7 +43,13 @@
                         />
                     </el-form-item>
                     <el-form-item label="默认值" prop="defaultValue">
-                        <el-time-select :model-value="settingData.defaultValue" :step="settingData.step || '00:30'" :format="settingData.format || 'HH:mm'" placeholder="选择时间默认值" />
+                        <el-time-select
+                            :model-value="settingData.defaultValue"
+                            :step="settingData.step || '00:30'"
+                            :format="settingData.format || 'HH:mm'"
+                            placeholder="选择时间默认值"
+                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'defaultValue', value)"
+                        />
                     </el-form-item>
                     <el-form-item label="时间格式" prop="format">
                         <el-input
