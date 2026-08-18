@@ -10,21 +10,22 @@
     </div>
 </template>
 <script setup lang="ts">
-import { provide, reactive, readonly, ref } from "vue";
-import useWidgetManage from "@/views/composables/widget-manage";
+import { provide, readonly, ref, reactive, type Reactive } from "vue";
 import { type WidgetFormData } from "@/views/composables/types";
+import useWidgetManage from "@/views/composables/widget-manage";
 import { useCreateDefaultData } from "@/views/composables/widgets/form";
 import leftWidgetPanel from "@/views/components/left-widget-panel.vue";
 import centerRenderPanel from "@/views/components/center-render-panel.vue";
 import rightSettingPanel from "@/views/components/right-setting-panel.vue";
 
-// 表单数据
-const widgetFormData = reactive<WidgetFormData>(useCreateDefaultData());
+// 表单数据，必须是响应式，否则组件管理无法更新
+const widgetFormData: Reactive<WidgetFormData> = reactive(useCreateDefaultData());
 
 // 选中的组件id
 const selectedWigetId = ref<string | null>(null);
 
 // 组件管理
+// @ts-expect-error TS2589: Vue 深层解包 WidgetFormData 时类型实例化过深
 const { changeSelectedWidgetId, changeSelectedWidgetSettingData, changeFormSettingData, insertWidgetDefaultData, updateWidgetOrder, copyWidgetData, deleteWidget, clearWidgets } = useWidgetManage(
     widgetFormData,
     selectedWigetId

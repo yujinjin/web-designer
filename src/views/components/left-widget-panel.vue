@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import { onMounted, shallowRef, onUnmounted } from "vue";
 import Sortable from "sortablejs";
-import { getWidgetGroup } from "@/views/composables/widget-manage";
+import { getWidgetGroup } from "@/views/composables/widget-registry";
 
 const widgetGroupRefs = shallowRef<(HTMLDivElement | null)[]>([]);
 

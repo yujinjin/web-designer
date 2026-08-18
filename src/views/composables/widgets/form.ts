@@ -1,7 +1,7 @@
 import { reactive, watch } from "vue";
 import { type FormItemRule } from "element-plus";
 import { randomId, setObjectProperty } from "@yujinjin/utils";
-import { type WidgetFormData } from "../types";
+import { type WidgetData, type WidgetFormData, type WidgetNormalData } from "../types";
 
 export const WIDGET_FORM_CODE = "form";
 
@@ -44,18 +44,43 @@ export function useSettingDataValueChange(data: WidgetFormData, fileName: keyof 
     (data.settingData as any)[fileName] = value;
 }
 
+// 生成表单字段组件的扁平化列表
+export function useFlatWidgetList(widgets: Array<WidgetData>): WidgetNormalData[] {
+    return widgets.reduce<WidgetNormalData[]>((list, item) => {
+        if ("widgets" in item && Array.isArray(item.widgets)) {
+            list.push(...item.widgets);
+        } else {
+            list.push(item as WidgetNormalData);
+        }
+        return list;
+    }, []);
+}
+
 // 生成渲染的表单数据
 export function useFormRenderData(data: WidgetFormData) {
     const formData = reactive<Record<string, any>>({});
-    data.widgets.forEach(item => {
-        formData[item.id] = item.defaultValue || null;
-    });
+    const syncFormData = function () {
+        const widgets = useFlatWidgetList(data.widgets);
+        const widgetIds = new Set(widgets.map(item => item.id));
+        Object.keys(formData).forEach(id => {
+            if (!widgetIds.has(id)) {
+                delete formData[id];
+            }
+        });
+        widgets.forEach(item => {
+            if (!Object.prototype.hasOwnProperty.call(formData, item.id)) {
+                formData[item.id] = item.defaultValue ?? null;
+            }
+        });
+    };
+    syncFormData();
     watch(
-        () => data.widgets.length,
+        () =>
+            useFlatWidgetList(data.widgets)
+                .map(item => item.id)
+                .join(","),
         () => {
-            data.widgets.forEach(item => {
-                formData[item.id] = formData[item.id] || item.defaultValue || null;
-            });
+            syncFormData();
         }
     );
     return formData;
@@ -64,8 +89,10 @@ export function useFormRenderData(data: WidgetFormData) {
 // 生成提交的表单数据
 export function useSubmitFormData(data: WidgetFormData, formData: Record<string, any>) {
     const submitData: Record<string, any> = {};
-    data.widgets.forEach(item => {
-        setObjectProperty(submitData, item.propName as string, formData[item.id]);
+    useFlatWidgetList(data.widgets).forEach(item => {
+        if (item.propName) {
+            setObjectProperty(submitData, item.propName, formData[item.id]);
+        }
     });
     return submitData;
 }

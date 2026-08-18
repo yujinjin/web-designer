@@ -18,16 +18,36 @@ import {
     type BorderStyle,
     type DividerProps
 } from "element-plus";
-import { type NotReadonly } from "/#/global.d";
+import { type Mutable } from "/#/global.d";
 
 export type UseSettingDataValueChangeFun = (data: any, fileName: keyof WidgetBaseData["settingData"], value: any) => void;
 
 export type ChangeSelectedWidgetSettingDataFun = (useSettingDataValueChangeFun: UseSettingDataValueChangeFun, fileName: string, value: any) => void;
 
+export type WidgetNormalData =
+    | WidgetTextData
+    | WidgetInputNumberData
+    | WidgetRadioGroupData
+    | WidgetCheckboxGroupData
+    | WidgetSelectData
+    | WidgetDatePickerData
+    | WidgetTimePickerData
+    | WidgetTimeSelectData
+    | WidgetSwitchData
+    | WidgetRateData
+    | WidgetColorPickerData
+    | WidgetSliderData
+    | WidgetUploadData
+    | WidgetHTMLData
+    | WidgetAlertData
+    | WidgetDividerData;
+
+export type WidgetData = WidgetNormalData | WidgetRowContainerData;
+
 export interface WidgetFormData {
     readonly id: string;
     readonly code: string;
-    readonly formAttributes: Partial<NotReadonly<FormProps>>;
+    readonly formAttributes: Partial<Mutable<FormProps>>;
     readonly componentFunctions: {
         init: string | null;
     };
@@ -37,7 +57,7 @@ export interface WidgetFormData {
         labelWidth: string | number | null;
         onInit: string;
     };
-    readonly widgets: Array<WidgetBaseData>;
+    readonly widgets: Array<WidgetData>;
 }
 
 export interface WidgetBaseData {
@@ -53,10 +73,22 @@ export interface WidgetBaseData {
     readonly settingData?: Record<string, any>;
 }
 
+export interface WidgetRowContainerData extends WidgetBaseData {
+    readonly widgets: Array<WidgetNormalData>;
+    readonly settingData: {
+        name: string;
+        gutter: number;
+        justify: "start" | "end" | "center" | "space-around" | "space-between" | "space-evenly";
+        align: "top" | "middle" | "bottom";
+        enableSpanConfig: boolean;
+        spans: number[];
+    };
+}
+
 // 先声明 WidgetTextData 接口
 export interface WidgetTextData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<InputProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<InputProps>>;
     readonly componentFunctions: {
         validate: string | null;
         blur: string | null;
@@ -95,8 +127,8 @@ export interface WidgetTextData extends WidgetBaseData {
 
 // 声明 WidgetInputNumberData 接口
 export interface WidgetInputNumberData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<InputNumberProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<InputNumberProps>>;
     readonly componentFunctions: {
         validate: string | null;
         change: string | null;
@@ -129,8 +161,8 @@ export interface WidgetInputNumberData extends WidgetBaseData {
 
 // 声明 WidgetRadioGroupData 接口
 export interface WidgetRadioGroupData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<RadioGroupProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<RadioGroupProps>>;
     readonly componentFunctions: {
         validate: string | null;
         change: string | null;
@@ -154,8 +186,8 @@ export interface WidgetRadioGroupData extends WidgetBaseData {
 
 // 声明 WidgetCheckboxGroupData 接口
 export interface WidgetCheckboxGroupData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<CheckboxGroupProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<CheckboxGroupProps>>;
     readonly componentFunctions: {
         validate: string | null;
         change: string | null;
@@ -181,8 +213,8 @@ export interface WidgetCheckboxGroupData extends WidgetBaseData {
 
 // 声明 WidgetSelectData 接口
 export interface WidgetSelectData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<SelectProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<SelectProps>>;
     readonly componentFunctions: {
         validate: string | null;
         change: string | null;
@@ -227,8 +259,8 @@ export interface WidgetSelectData extends WidgetBaseData {
 
 // 声明 WidgetDatePickerData 接口
 export interface WidgetDatePickerData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<DatePickerProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<DatePickerProps>>;
     readonly componentFunctions: {
         validate: string | null;
         change: string | null;
@@ -275,8 +307,8 @@ export interface WidgetDatePickerData extends WidgetBaseData {
 }
 
 export interface WidgetTimePickerData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<TimePickerDefaultProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<TimePickerDefaultProps>>;
     readonly componentFunctions: {
         validate: string | null;
         change: string | null;
@@ -319,8 +351,8 @@ export interface WidgetTimePickerData extends WidgetBaseData {
 
 // 声明 WidgetTimeSelectData 接口
 export interface WidgetTimeSelectData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<TimeSelectProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<TimeSelectProps>>;
     readonly componentFunctions: {
         validate: string | null;
         change: string | null;
@@ -356,8 +388,8 @@ export interface WidgetTimeSelectData extends WidgetBaseData {
 
 // 声明 WidgetSwitchData 接口
 export interface WidgetSwitchData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<SwitchProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<SwitchProps>>;
     readonly componentFunctions: {
         validate: string | null;
         change: string | null;
@@ -381,8 +413,8 @@ export interface WidgetSwitchData extends WidgetBaseData {
 }
 
 export interface WidgetRateData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<RateProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<RateProps>>;
     readonly componentFunctions: {
         validate: string | null;
         change: string | null;
@@ -410,8 +442,8 @@ export interface WidgetRateData extends WidgetBaseData {
 
 // 声明 WidgetColorPickerData 接口
 export interface WidgetColorPickerData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<ColorPickerProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<ColorPickerProps>>;
     readonly componentFunctions: {
         validate: string | null;
         change: string | null;
@@ -442,8 +474,8 @@ export interface WidgetColorPickerData extends WidgetBaseData {
 
 // 声明 WidgetSliderData 接口
 export interface WidgetSliderData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<SliderProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<SliderProps>>;
     readonly componentFunctions: {
         validate: string | null;
         change: string | null;
@@ -484,8 +516,8 @@ export interface WidgetSliderData extends WidgetBaseData {
 
 // 声明 WidgetUploadData 接口
 export interface WidgetUploadData extends WidgetBaseData {
-    readonly formAttributes: Partial<NotReadonly<FormItemProps>>;
-    readonly componentAttributes: Partial<NotReadonly<UploadProps>>;
+    readonly formAttributes: Partial<Mutable<FormItemProps>>;
+    readonly componentAttributes: Partial<Mutable<UploadProps>>;
     readonly componentFunctions: {
         validate: string | null;
         data: string | null;
@@ -544,7 +576,7 @@ export interface WidgetHTMLData extends WidgetBaseData {
 
 // 声明 WidgetAlertData 接口
 export interface WidgetAlertData extends WidgetBaseData {
-    readonly componentAttributes: Partial<NotReadonly<AlertProps>>;
+    readonly componentAttributes: Partial<Mutable<AlertProps>>;
     readonly settingData: {
         propName: string | null;
         control: "isShow"[];
@@ -561,7 +593,7 @@ export interface WidgetAlertData extends WidgetBaseData {
 
 // 声明 WidgetDividerData 接口
 export interface WidgetDividerData extends WidgetBaseData {
-    readonly componentAttributes: Partial<NotReadonly<DividerProps>>;
+    readonly componentAttributes: Partial<Mutable<DividerProps>>;
     readonly settingData: {
         propName: string | null;
         control: "isShow"[];

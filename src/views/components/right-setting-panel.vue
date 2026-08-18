@@ -2,7 +2,8 @@
     <div class="right-setting-panel">
         <el-tabs model-value="component">
             <el-tab-pane label="组件设置" name="component">
-                <component :is="widgetComponent" v-if="widgetComponent" :setting-data="selectedWidgetData!.settingData as any" />
+                <component :is="widgetComponent" v-if="widgetComponent && selectedWidgetData" :setting-data="selectedWidgetData.settingData as any" :widget-data="selectedWidgetData as any" />
+                <el-empty v-else description="请选择组件" :image-size="100" />
             </el-tab-pane>
             <el-tab-pane label="表单设置" name="form">
                 <form-setting />
@@ -14,7 +15,8 @@
 import { inject, defineAsyncComponent, computed, type Ref } from "vue";
 import formSetting from "./widgets-setting/form.vue";
 import { type WidgetFormData } from "@/views/composables/types";
-import { getWidgetList } from "@/views/composables/widget-manage";
+import { getWidgetList } from "@/views/composables/widget-registry";
+import { findWidgetData } from "@/views/composables/widget-tree";
 
 // 获取注入的选中的组件id
 const selectedWigetId = inject<Ref<string | null>>("selectedWigetId");
@@ -24,7 +26,7 @@ const widgetFormData = inject<WidgetFormData>("widgetFormData");
 
 // 获取注入的组件数据
 const selectedWidgetData = computed(() => {
-    return widgetFormData?.widgets.find((item: any) => item.id === selectedWigetId?.value);
+    return findWidgetData(widgetFormData?.widgets || [], selectedWigetId?.value || null)?.widgetData;
 });
 
 // 获取组件的列表数据
@@ -65,6 +67,8 @@ const widgetComponent = computed(() => {
             return defineAsyncComponent(() => import("./widgets-setting/alert.vue"));
         case widgetList.WIDGET_DIVIDER.code:
             return defineAsyncComponent(() => import("./widgets-setting/divider.vue"));
+        case widgetList.WIDGET_ROW_CONTAINER.code:
+            return defineAsyncComponent(() => import("./widgets-setting/row-container.vue"));
         default:
             return null;
     }
