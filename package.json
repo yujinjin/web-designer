@@ -31,6 +31,7 @@
         "B_PRD": "vue-tsc -b && vite build --mode prd",
         "preview": "vite preview",
         "format": "prettier --write \"**/*.{js,cjs,mjs,ts,tsx,json,css,scss,vue,html,md}\"",
+        "test:unit": "vitest run",
         "lint": "eslint .",
         "lint:fix": "eslint --fix ."
     },
