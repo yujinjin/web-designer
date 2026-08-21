@@ -146,8 +146,14 @@ const widgetList = getWidgetList();
 </script>
 <style lang="scss" scoped>
 .html-contents,
-.alert-box {
-    padding: 12px 0px;
+.alert-box,
+.divider-box {
+    min-width: 0;
+    padding: 8px 0;
+}
+
+.html-contents {
+    overflow-wrap: anywhere;
     font-size: 14px;
 }
 </style>

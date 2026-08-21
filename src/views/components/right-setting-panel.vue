@@ -77,18 +77,21 @@ const widgetComponent = computed(() => {
 <style lang="scss" scoped>
 .right-setting-panel {
     height: 100%;
-    width: 350px;
-    overflow-x: hidden;
-    border-left: 1px solid #e5e5e5;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
 
     :deep(.el-tabs) {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+
         .el-tabs__header {
+            flex: none;
             margin: 0;
             background-color: #ffffff;
             border-bottom: 1px solid #e9ecef;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            position: sticky;
-            top: 0;
             z-index: 10;
 
             .el-tabs__nav {
@@ -102,7 +105,11 @@ const widgetComponent = computed(() => {
         }
 
         .el-tabs__content {
-            padding: 0px 12px;
+            flex: 1;
+            min-height: 0;
+            padding: 0 16px 16px;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
     }
 }
