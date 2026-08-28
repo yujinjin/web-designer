@@ -8,6 +8,7 @@ const expectedWidgetListKeys = [
     "WIDGET_RADIO_GROUP",
     "WIDGET_CHECKBOX_GROUP",
     "WIDGET_SELECT",
+    "WIDGET_CASCADER",
     "WIDGET_DATE_PICKER",
     "WIDGET_TIME_PICKER",
     "WIDGET_TIME_SELECT",
@@ -25,7 +26,7 @@ const expectedWidgetListKeys = [
 const expectedGroups = [
     { groupName: "布局型组件", codes: ["row-container"] },
     { groupName: "输入型组件", codes: ["text", "input-number"] },
-    { groupName: "选择型组件", codes: ["select", "radio-group", "checkbox-group", "switch", "slider", "upload"] },
+    { groupName: "选择型组件", codes: ["select", "cascader", "radio-group", "checkbox-group", "switch", "slider", "upload"] },
     { groupName: "日期时间型组件", codes: ["date-picker", "time-picker", "time-select"] },
     { groupName: "其他", codes: ["color-picker", "rate", "html", "alert", "divider"] }
 ];
