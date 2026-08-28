@@ -45,6 +45,7 @@
                         <option-config
                             :options="settingData.options"
                             :default-value="settingData.defaultValue!"
+                            :multiple="true"
                             @update-default-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'defaultValue', value)"
                             @update-options="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'options', value)"
                         />

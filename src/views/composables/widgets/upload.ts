@@ -3,7 +3,7 @@
  * @remarks
  * 各钩子以完整源码供设置面板编辑，以纯函数体供运行时按需包装，避免把 Function 写入需要复制和导出的设计数据。
  * 只有已配置的钩子才会出现在返回属性中，未配置项继续使用 Element Plus 默认行为；脚本异常或 Promise 拒绝由上传调用链处理。
- * 当前 `fileList` 参数尚未合并到返回属性，若需要受控文件列表必须显式映射，普通 `v-model` 不能替代 `v-model:file-list`。
+ * 受控文件列表由 `widget-renderer.vue` 通过 `v-model:file-list` 绑定，本模块不把它重复合并到属性对象；普通 `v-model` 不能替代该具名模型。
  */
 import { randomId } from "@yujinjin/utils";
 import { type UploadFile, type UploadUserFile } from "element-plus";
@@ -30,7 +30,7 @@ export function useCreateDefaultData(): WidgetUploadData {
         code: WIDGET_UPLOAD.code,
         name: WIDGET_UPLOAD.name,
         isShow: true,
-        defaultValue: null,
+        defaultValue: [],
         propName: id,
         formAttributes: {
             label: WIDGET_UPLOAD.name,
@@ -59,7 +59,7 @@ export function useCreateDefaultData(): WidgetUploadData {
             propName: id,
             label: WIDGET_UPLOAD.name,
             labelPosition: "left",
-            defaultValue: null,
+            defaultValue: [],
             required: false,
             requiredMessage: null,
             control: ["isShow"],
@@ -117,7 +117,7 @@ export function useCreateDefaultData(): WidgetUploadData {
 /**
  * @description 生成传给 ElUpload 的属性与钩子对象。
  * @param widgetUploadData 当前上传节点数据。
- * @param fileList 当前渲染值。该参数为注册表统一属性适配签名保留，但当前实现没有把它合并为 `fileList` 属性；若改为受控文件列表，必须显式完成映射，不能假定普通 `v-model` 等同于 `v-model:file-list`。
+ * @param fileList 当前渲染值；为注册表统一属性适配签名保留，受控文件列表由渲染器的 `v-model:file-list` 负责绑定。
  * @returns 合并静态属性与已配置上传钩子的新对象。
  * @remarks 动态函数通过新对象临时合并，避免把不可序列化的 Function 写回设计数据；data 和 httpRequest 当前也未加入返回属性。
  */
@@ -249,6 +249,11 @@ export function useSettingDataValueChange(widgetUploadData: WidgetUploadData, fi
     switch (fileName) {
         case "propName":
             widgetUploadData[fileName] = value;
+            break;
+        case "defaultValue":
+            // ElUpload 的 file-list 会被直接遍历和展开，空值必须归一化为数组。
+            value = Array.isArray(value) ? value : [];
+            widgetUploadData.defaultValue = value;
             break;
         case "label":
         case "labelPosition":

@@ -18,7 +18,7 @@ export const WIDGET_CHECKBOX_GROUP = {
 /**
  * @description 创建复选组独立数据。
  * @returns 相互隔离的新复选组节点数据。
- * @remarks 默认值应为与选项 value 类型一致的数组，null 表示尚未选择。
+ * @remarks 默认值必须是与选项 value 类型一致的数组，空数组表示尚未选择。
  */
 export function useCreateDefaultData(): WidgetCheckboxGroupData {
     // 根据组件 code 生成当前设计节点的唯一 ID。
@@ -28,7 +28,7 @@ export function useCreateDefaultData(): WidgetCheckboxGroupData {
         code: WIDGET_CHECKBOX_GROUP.code,
         name: WIDGET_CHECKBOX_GROUP.name,
         isShow: true,
-        defaultValue: null,
+        defaultValue: [],
         propName: id,
         formAttributes: {
             label: WIDGET_CHECKBOX_GROUP.name,
@@ -57,7 +57,7 @@ export function useCreateDefaultData(): WidgetCheckboxGroupData {
                 { value: "2", label: "选项2" },
                 { value: "3", label: "选项3", disabled: true }
             ],
-            defaultValue: null,
+            defaultValue: [],
             control: [],
             type: "checkbox",
             min: null,
@@ -97,6 +97,8 @@ export function useSettingDataValueChange(widgetCheckboxGroupData: WidgetCheckbo
     switch (fileName) {
         case "propName":
         case "defaultValue":
+            // Element Plus 复选组只接受数组；设置面板清空时也必须保持该模型不变量。
+            value = Array.isArray(value) ? value : [];
             widgetCheckboxGroupData[fileName] = value;
             break;
         case "label":
