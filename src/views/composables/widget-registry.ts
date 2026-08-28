@@ -6,6 +6,7 @@ import {
     type WidgetAlertData,
     type WidgetBaseData,
     type WidgetCheckboxGroupData,
+    type WidgetCascaderData,
     type WidgetColorPickerData,
     type WidgetData,
     type WidgetDatePickerData,
@@ -34,6 +35,7 @@ import {
     useCreateDefaultData as useCheckboxGroupCreateDefaultData
 } from "./widgets/checkbox-group";
 import { WIDGET_SELECT, useAttributes as useSelectAttributes, useEvents as useSelectEvents, useCreateDefaultData as useSelectCreateDefaultData } from "./widgets/select";
+import { WIDGET_CASCADER, useAttributes as useCascaderAttributes, useEvents as useCascaderEvents, useCreateDefaultData as useCascaderCreateDefaultData } from "./widgets/cascader";
 import { WIDGET_DATE_PICKER, useAttributes as useDatePickerAttributes, useEvents as useDatePickerEvents, useCreateDefaultData as useDatePickerCreateDefaultData } from "./widgets/date-picker";
 import { WIDGET_TIME_PICKER, useAttributes as useTimePickerAttributes, useEvents as useTimePickerEvents, useCreateDefaultData as useTimePickerCreateDefaultData } from "./widgets/time-picker";
 import { WIDGET_TIME_SELECT, useAttributes as useTimeSelectAttributes, useEvents as useTimeSelectEvents, useCreateDefaultData as useTimeSelectCreateDefaultData } from "./widgets/time-select";
@@ -186,6 +188,15 @@ export const WIDGET_DEFINITIONS = [
         createDefaultData: useSelectCreateDefaultData,
         getAttributes: useSelectAttributes,
         getEvents: useSelectEvents
+    }),
+    defineWidget<"WIDGET_CASCADER", WidgetCascaderData>({
+        key: "WIDGET_CASCADER",
+        meta: WIDGET_CASCADER,
+        group: "selection",
+        groupOrder: 0.5,
+        createDefaultData: useCascaderCreateDefaultData,
+        getAttributes: useCascaderAttributes,
+        getEvents: useCascaderEvents
     }),
     defineWidget<"WIDGET_DATE_PICKER", WidgetDatePickerData>({
         key: "WIDGET_DATE_PICKER",

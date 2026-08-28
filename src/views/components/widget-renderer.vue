@@ -56,6 +56,12 @@
             v-bind="getWidgetComponentAttributes(widgetData, renderValue)"
             v-on="getWidgetComponentEvents(widgetData, formData, widgetFormData)"
         />
+        <el-cascader
+            v-else-if="widgetData.code === widgetList.WIDGET_CASCADER.code"
+            v-model="renderValue"
+            v-bind="getWidgetComponentAttributes(widgetData, renderValue)"
+            v-on="getWidgetComponentEvents(widgetData, formData, widgetFormData)"
+        />
         <el-date-picker
             v-else-if="widgetData.code === widgetList.WIDGET_DATE_PICKER.code"
             v-model="renderValue"
@@ -95,7 +101,7 @@
         />
         <el-upload
             v-else-if="widgetData.code === widgetList.WIDGET_UPLOAD.code"
-            v-model="renderValue"
+            v-model:file-list="renderValue"
             v-bind="getWidgetComponentAttributes(widgetData, renderValue)"
             v-on="getWidgetComponentEvents(widgetData, formData, widgetFormData)"
         >

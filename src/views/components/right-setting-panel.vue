@@ -45,6 +45,8 @@ const widgetComponent = computed(() => {
             return defineAsyncComponent(() => import("./widgets-setting/checkbox-group.vue"));
         case widgetList.WIDGET_SELECT.code:
             return defineAsyncComponent(() => import("./widgets-setting/select.vue"));
+        case widgetList.WIDGET_CASCADER.code:
+            return defineAsyncComponent(() => import("./widgets-setting/cascader.vue"));
         case widgetList.WIDGET_DATE_PICKER.code:
             return defineAsyncComponent(() => import("./widgets-setting/date-picker.vue"));
         case widgetList.WIDGET_TIME_PICKER.code:
