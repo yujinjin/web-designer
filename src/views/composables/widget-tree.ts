@@ -4,6 +4,7 @@
  */
 import { randomId } from "@yujinjin/utils";
 import { type Mutable } from "/#/global.d";
+import { buildWidgetComponentAttributes, getWidgetDefinition } from "./widget-registry";
 import { WIDGET_ROW_CONTAINER } from "./widgets/row-container";
 import { type WidgetBaseData, type WidgetData, type WidgetNormalData, type WidgetRowContainerData } from "./types";
 
@@ -93,11 +94,30 @@ const resetNormalWidgetId = function (widgetData: WidgetNormalData) {
 };
 
 /**
+ * @description 为完成 JSON 深拷贝的节点恢复组件运行属性。
+ * @param widgetData 已断开原对象引用并完成身份重建的 Widget 副本。
+ * @returns 无返回值；有属性构建器时写入完整新缓存，无构建器时删除序列化残留。
+ * @throws {Error} 组件 code 未注册或对应 useAttributes 构建失败时向上抛出。
+ * @remarks 复制会丢失 componentAttributes 中的 Function，必须在返回副本前使用与 JSON 恢复相同的注册表构建能力重新生成。
+ */
+const materializeClonedWidgetAttributes = function (widgetData: WidgetBaseData): void {
+    const definition = getWidgetDefinition(widgetData.code);
+    if (!definition) {
+        throw new Error(`未知组件类型：${widgetData.code}`);
+    }
+    if (!definition.getAttributes) {
+        delete (widgetData as Mutable<WidgetBaseData>).componentAttributes;
+        return;
+    }
+    (widgetData as Mutable<WidgetBaseData>).componentAttributes = buildWidgetComponentAttributes(widgetData);
+};
+
+/**
  * @description 创建可独立插入组件树的副本，并为容器及其全部子字段生成新标识。
  * @param widgetData 待复制的原组件数据。
- * @returns 与原组件无共享嵌套引用的新组件数据；布局 span 等业务配置保持不变。
- * @throws 传入循环引用、BigInt 或其他不可 JSON 序列化数据时传播原生序列化异常。
- * @remarks 使用 JSON 深拷贝是因为组件配置被约束为可序列化数据；传入循环引用或 BigInt 等非 JSON 数据时会沿用原生序列化异常。
+ * @returns 与原组件无共享嵌套引用且已恢复运行属性的新组件数据；布局 span 等业务配置保持不变。
+ * @throws {Error} 数据不可 JSON 序列化、组件未注册或运行属性构建失败时向上抛出。
+ * @remarks 使用 JSON 深拷贝断开设计数据引用，随后必须重建身份和运行属性，使调用方获得可直接插入设计树的完整副本。
  */
 export const cloneWidgetData = function (widgetData: WidgetData): WidgetData {
     // 先断开所有嵌套引用，保证随后改写副本 id、settingData 等内容不会污染原组件。
@@ -106,9 +126,14 @@ export const cloneWidgetData = function (widgetData: WidgetData): WidgetData {
     if (isRowContainerWidget(newWidgetData)) {
         // 容器自身只承担布局身份；内部普通字段还会参与表单取值和校验，所以每个子字段都必须完整重建身份链。
         (newWidgetData as Mutable<WidgetRowContainerData>).id = WIDGET_ROW_CONTAINER.code.replace(/-/g, "_") + "_" + randomId();
-        newWidgetData.widgets.forEach(item => resetNormalWidgetId(item));
+        materializeClonedWidgetAttributes(newWidgetData);
+        newWidgetData.widgets.forEach(item => {
+            resetNormalWidgetId(item);
+            materializeClonedWidgetAttributes(item);
+        });
     } else {
         resetNormalWidgetId(newWidgetData as WidgetNormalData);
+        materializeClonedWidgetAttributes(newWidgetData);
     }
     return newWidgetData;
 };

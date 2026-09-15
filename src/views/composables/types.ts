@@ -24,7 +24,14 @@ import {
     type DividerProps,
     type CascaderOption as ElementPlusCascaderOption
 } from "element-plus";
+import { type ExtractPropTypes } from "vue";
 import { type Mutable } from "/#/global.d";
+
+/**
+ * @description ElCascader 组件实际接收的属性类型。
+ * @remarks Element Plus 顶层导出的同名 CascaderProps 属于 CascaderPanel 的字段映射配置，不包含 options、props、placeholder 等 ElCascader 外层属性，因此必须从 cascaderProps 声明提取。
+ */
+type CascaderProps = ExtractPropTypes<typeof import("element-plus").cascaderProps>;
 
 /**
  * @description 组件专属设置同步函数协议。
@@ -119,7 +126,7 @@ export interface WidgetBaseData {
     propName: string | null;
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes?: Record<string, any>;
-    /** 直接传递给渲染组件的运行态属性。 */
+    /** 直接传递给渲染组件的可选运行态缓存；规范 JSON 不包含该字段。 */
     readonly componentAttributes?: Record<string, any>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions?: Record<string, any>;
@@ -157,7 +164,7 @@ export interface WidgetTextData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<InputProps>>;
+    readonly componentAttributes?: Partial<Mutable<InputProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -233,7 +240,7 @@ export interface WidgetInputNumberData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<InputNumberProps>>;
+    readonly componentAttributes?: Partial<Mutable<InputNumberProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -297,7 +304,7 @@ export interface WidgetRadioGroupData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<RadioGroupProps>>;
+    readonly componentAttributes?: Partial<Mutable<RadioGroupProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -350,7 +357,7 @@ export interface WidgetCheckboxGroupData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<CheckboxGroupProps>>;
+    readonly componentAttributes?: Partial<Mutable<CheckboxGroupProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -407,7 +414,7 @@ export interface WidgetSelectData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<SelectProps>>;
+    readonly componentAttributes?: Partial<Mutable<SelectProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -557,37 +564,7 @@ export interface WidgetCascaderData extends WidgetBaseData {
     /** 传递给 ElFormItem 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给 ElCascader 的展示与选择行为属性；options 由专用渲染组件从设置态注入。 */
-    readonly componentAttributes: {
-        /** 字段没有值时展示的占位文案。 */
-        placeholder?: string;
-        /** 是否禁用组件。 */
-        disabled?: boolean;
-        /** 是否允许清空当前值。 */
-        clearable?: boolean;
-        /** 是否支持输入关键字过滤节点。 */
-        filterable?: boolean;
-        /** 输入框是否展示完整选中路径。 */
-        showAllLevels?: boolean;
-        /** 多选时是否折叠已选标签。 */
-        collapseTags?: boolean;
-        /** 折叠前最多直接展示的标签数量。 */
-        maxCollapseTags?: number;
-        /** 悬停折叠标签时是否展示完整内容。 */
-        collapseTagsTooltip?: boolean;
-        /** 层级路径之间使用的分隔符。 */
-        separator?: string;
-        /** Element Plus Cascader Panel 的选择行为配置。 */
-        props?: {
-            /** 是否允许多选。 */
-            multiple?: boolean;
-            /** 是否严格遵守父子节点不互相关联。 */
-            checkStrictly?: boolean;
-            /** 组件值是否包含完整节点路径。 */
-            emitPath?: boolean;
-            /** 子菜单通过点击或悬停展开。 */
-            expandTrigger?: "click" | "hover";
-        };
-    };
+    readonly componentAttributes?: Partial<Mutable<CascaderProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -677,7 +654,7 @@ export interface WidgetDatePickerData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<DatePickerProps>>;
+    readonly componentAttributes?: Partial<Mutable<DatePickerProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -771,7 +748,7 @@ export interface WidgetTimePickerData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<TimePickerDefaultProps>>;
+    readonly componentAttributes?: Partial<Mutable<TimePickerDefaultProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -855,7 +832,7 @@ export interface WidgetTimeSelectData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<TimeSelectProps>>;
+    readonly componentAttributes?: Partial<Mutable<TimeSelectProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -925,7 +902,7 @@ export interface WidgetSwitchData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<SwitchProps>>;
+    readonly componentAttributes?: Partial<Mutable<SwitchProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -973,7 +950,7 @@ export interface WidgetRateData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<RateProps>>;
+    readonly componentAttributes?: Partial<Mutable<RateProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -1027,7 +1004,7 @@ export interface WidgetColorPickerData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<ColorPickerProps>>;
+    readonly componentAttributes?: Partial<Mutable<ColorPickerProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -1087,7 +1064,7 @@ export interface WidgetSliderData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<SliderProps>>;
+    readonly componentAttributes?: Partial<Mutable<SliderProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -1167,7 +1144,7 @@ export interface WidgetUploadData extends WidgetBaseData {
     /** 传递给 ElFormItem 或 ElForm 的运行态表单属性。 */
     readonly formAttributes: Partial<Mutable<FormItemProps>>;
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<UploadProps>>;
+    readonly componentAttributes?: Partial<Mutable<UploadProps>>;
     /** 由设置态完整脚本转换得到的运行时函数体集合。 */
     readonly componentFunctions: {
         /** 自定义字段校验脚本的可执行函数体；null 表示未配置。 */
@@ -1280,7 +1257,7 @@ export interface WidgetHTMLData extends WidgetBaseData {
  */
 export interface WidgetAlertData extends WidgetBaseData {
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<AlertProps>>;
+    readonly componentAttributes?: Partial<Mutable<AlertProps>>;
     /** 设置面板直接编辑和回显的数据集合。 */
     readonly settingData: {
         /** 提交数据使用的业务字段名或嵌套路径；null 表示不进入提交对象。 */
@@ -1311,7 +1288,7 @@ export interface WidgetAlertData extends WidgetBaseData {
  */
 export interface WidgetDividerData extends WidgetBaseData {
     /** 直接传递给渲染组件的运行态属性。 */
-    readonly componentAttributes: Partial<Mutable<DividerProps>>;
+    readonly componentAttributes?: Partial<Mutable<DividerProps>>;
     /** 设置面板直接编辑和回显的数据集合。 */
     readonly settingData: {
         /** 提交数据使用的业务字段名或嵌套路径；null 表示不进入提交对象。 */

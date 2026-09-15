@@ -1,6 +1,6 @@
 /**
  * @fileoverview 组件注册表与运行时分发模块，统一声明组件元数据、分组、默认值工厂、属性适配器和事件适配器。
- * @remarks 注册阶段通过泛型保证适配器与具体组件数据类型匹配，运行阶段擦除为统一定义；未知 code 的创建和属性读取回退到文本框，事件则返回空对象。
+ * @remarks 注册阶段通过泛型保证适配器与具体组件数据类型匹配，运行阶段擦除为统一定义；未知 code 仅在默认创建时回退到文本框，严格属性物化会报错，事件返回空对象。
  */
 import {
     type WidgetAlertData,
@@ -86,12 +86,11 @@ export interface WidgetDefinition<K extends string = string> {
      */
     createDefaultData: () => WidgetData;
     /**
-     * @description 把设计态数据转换为组件运行属性；静态或布局组件不需要时可以省略。
+     * @description 从可序列化设计源完整构建组件运行属性；无组件属性节点可以省略。
      * @param widgetData 当前组件设计数据。
-     * @param value 当前字段渲染值，供动态属性函数读取。
      * @returns 传给渲染组件的属性对象。
      */
-    getAttributes?: (widgetData: WidgetBaseData, value: any) => Record<string, any>;
+    getAttributes?: (widgetData: WidgetBaseData) => Record<string, any>;
     /**
      * @description 生成依赖当前表单上下文的运行事件；没有交互回调的组件可以省略。
      * @param widgetData 当前组件设计数据。
@@ -115,10 +114,9 @@ type TypedWidgetDefinition<K extends string, T extends WidgetData> = Omit<Widget
     /**
      * @description 将具体组件数据转换为运行属性。
      * @param widgetData 与当前注册项一致的具体组件数据。
-     * @param value 当前字段渲染值。
      * @returns 组件运行属性对象。
      */
-    getAttributes?: (widgetData: T, value: any) => Record<string, any>;
+    getAttributes?: (widgetData: T) => Record<string, any>;
     /**
      * @description 为具体组件创建运行事件映射。
      * @param widgetData 与当前注册项一致的具体组件数据。
@@ -333,7 +331,7 @@ const WIDGET_LIST = Object.fromEntries(WIDGET_DEFINITIONS.map(item => [item.key,
  * @remarks 文本框回退用于兼容旧数据和外部导入数据，因此未注册 code 不会抛错。
  */
 export const createWidgetDefaultData = function (code: string): WidgetData {
-    return WIDGET_DEFINITION_MAP.get(code)?.createDefaultData() ?? useTextCreateDefaultData();
+    return WIDGET_DEFINITION_MAP.get(code)?.createDefaultData() ?? WIDGET_DEFINITION_MAP.get(WIDGET_TEXT.code)!.createDefaultData();
 };
 
 /**
@@ -361,21 +359,30 @@ export const getWidgetList = function (): WidgetList {
 };
 
 /**
- * @description 获取组件渲染属性。
- * @param widgetData 当前组件设计数据。
- * @param value 当前字段渲染值。
- * @returns 注册适配器生成的属性；未知或无适配器时返回文本框属性。
- * @throws 组件适配器内部异常会原样传播。
- * @remarks 属性使用文本框兜底以维持历史数据可渲染性。
+ * @description 严格查找指定 code 的组件注册定义。
+ * @param code 外部数据或设计节点中的稳定组件 code。
+ * @returns 精确匹配的注册定义；未知 code 返回 undefined，不应用文本框回退。
  */
-export const getWidgetComponentAttributes = function (widgetData: WidgetBaseData, value: any): Record<string, any> {
-    // 按持久化 code 查找当前组件对应的注册定义。
+export const getWidgetDefinition = function (code: string): WidgetDefinition | undefined {
+    return WIDGET_DEFINITION_MAP.get(code);
+};
+
+/**
+ * @description 从 Widget 的可序列化设计源完整构建组件运行属性。
+ * @param widgetData 待构建属性的具体 Widget。
+ * @returns 新的完整组件属性对象；明确无组件属性的节点返回空对象。
+ * @throws {Error} code 未注册或注册项声明需要属性但缺少构建器时抛出。
+ * @remarks 本函数不读取或写回 componentAttributes，供设计物化、预览和一致性检查共用。
+ */
+export const buildWidgetComponentAttributes = function (widgetData: WidgetBaseData): Record<string, any> {
     const definition = WIDGET_DEFINITION_MAP.get(widgetData.code);
-    if (definition?.getAttributes) {
-        return definition.getAttributes(widgetData, value);
+    if (!definition) {
+        throw new Error(`未知组件类型：${widgetData.code}`);
     }
-    // 属性适配需要一个可用兜底，旧版本未知 code 才能继续渲染并被用户修复或重新保存。
-    return useTextAttributes(widgetData as WidgetTextData);
+    if (!definition.getAttributes) {
+        return {};
+    }
+    return definition.getAttributes(widgetData);
 };
 
 /**
