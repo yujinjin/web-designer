@@ -6,6 +6,7 @@
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetAlertData } from "../types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
 
 /** 注册表使用的提示组件稳定 code 与组件库展示元数据。 */
 export const WIDGET_ALERT = {
@@ -14,6 +15,15 @@ export const WIDGET_ALERT = {
     description: "用于显示提示信息",
     icon: "icon-alert"
 };
+
+/**
+ * @description 获取 Alert 的运行态属性。
+ * @param widgetAlertData 当前提示信息节点数据。
+ * @returns 从提示内容与展示设置完整构建的新属性对象。
+ */
+export function useAttributes(widgetAlertData: WidgetAlertData): NonNullable<WidgetAlertData["componentAttributes"]> {
+    return buildDefinedAttributes(widgetAlertData.settingData, ["title", "description", "type", "showIcon", "closable", "center", "closeText", "effect"]);
+}
 
 /**
  * @description 创建提示信息组件数据。
@@ -31,7 +41,13 @@ export function useCreateDefaultData(): WidgetAlertData {
         defaultValue: null,
         propName: id,
         componentAttributes: {
-            title: "提示信息"
+            title: "提示信息",
+            type: "info",
+            showIcon: false,
+            closable: true,
+            center: false,
+            closeText: "关闭",
+            effect: "light"
         },
         settingData: {
             propName: id,
@@ -49,15 +65,6 @@ export function useCreateDefaultData(): WidgetAlertData {
 }
 
 /**
- * @description 获取 Alert 的运行态属性。
- * @param widgetAlertData 当前提示信息节点数据。
- * @returns componentAttributes 原始引用；该组件没有动态属性适配。
- */
-export function useAttributes(widgetAlertData: WidgetAlertData) {
-    return widgetAlertData.componentAttributes;
-}
-
-/**
  * @description 同步提示内容、样式和节点显示状态。
  * @param widgetAlertData 将被原地更新的提示信息节点数据。
  * @param fileName 发生变化的设置字段。
@@ -66,6 +73,8 @@ export function useAttributes(widgetAlertData: WidgetAlertData) {
  * @remarks control 只影响设计器是否渲染该节点，不会写入 disabled 等无意义属性，因为 Alert 本身没有输入交互。
  */
 export function useSettingDataValueChange(widgetAlertData: WidgetAlertData, fileName: keyof WidgetAlertData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = widgetAlertData.componentAttributes!;
     switch (fileName) {
         case "propName":
             widgetAlertData.propName = value;
@@ -82,7 +91,7 @@ export function useSettingDataValueChange(widgetAlertData: WidgetAlertData, file
         case "center":
         case "closeText":
         case "effect":
-            widgetAlertData.componentAttributes[fileName] = value;
+            componentAttributes[fileName] = value;
             break;
     }
     (widgetAlertData.settingData as any)[fileName] = value;

@@ -7,6 +7,8 @@
 import { randomId } from "@yujinjin/utils";
 import { type Arrayable } from "element-plus/es/utils/typescript.mjs";
 import { type WidgetSliderData, type WidgetFormData } from "../types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { createWidgetComponentFunction, extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的滑块稳定 code 与组件库展示元数据。 */
 export const WIDGET_SLIDER = {
@@ -15,6 +17,48 @@ export const WIDGET_SLIDER = {
     description: "滑动选择",
     icon: "icon-slider"
 };
+
+/**
+ * @description 合并滑块静态属性和提示文本格式化函数。
+ * @param widgetSliderData 当前滑块节点数据。
+ * @param value 当前滑块值；保留该参数用于统一适配签名，格式化脚本按组件回调参数获取刻度值。
+ * @returns 新的组件属性对象，不修改原 componentAttributes。
+ * @remarks 格式化脚本只获得当前刻度值，不注入整个表单，避免纯展示函数产生不必要的上下文依赖。
+ */
+export function useAttributes(widgetSliderData: WidgetSliderData): NonNullable<WidgetSliderData["componentAttributes"]> {
+    // 收集由脚本配置动态生成的组件属性函数。
+    const functionAttributes: Record<string, (value: number) => string> = {};
+    if (widgetSliderData.componentFunctions.formatTooltip) {
+        /**
+         * @description 执行滑块提示文本格式化脚本。
+         * @param value 当前刻度值。
+         * @returns 格式化后的提示文本。
+         * @throws 配置脚本语法错误或执行失败时原样抛出。
+         */
+        functionAttributes.formatTooltip = function (value: number) {
+            return new Function("value", widgetSliderData.componentFunctions.formatTooltip as string)(value);
+        };
+    }
+    if (widgetSliderData.componentFunctions.formatValueText) {
+        /**
+         * @description 执行滑块无障碍值文本格式化脚本。
+         * @param value 当前刻度值。
+         * @returns 格式化后的值文本。
+         * @throws 配置脚本语法错误或执行失败时原样抛出。
+         */
+        functionAttributes.formatValueText = function (value: number) {
+            return new Function("value", widgetSliderData.componentFunctions.formatValueText as string)(value);
+        };
+    }
+    return Object.assign(
+        buildDefinedAttributes(
+            widgetSliderData.settingData,
+            ["min", "max", "step", "showInput", "showInputControls", "showStops", "showTooltip", "range", "vertical", "height", "rangeStartLabel", "rangeEndLabel", "placement", "marks", "persistent"],
+            { disabled: widgetSliderData.settingData.control.includes("disabled") }
+        ),
+        functionAttributes
+    );
+}
 
 /**
  * @description 创建滑块独立数据。
@@ -39,7 +83,16 @@ export function useCreateDefaultData(): WidgetSliderData {
         },
         componentAttributes: {
             min: 0,
-            max: 100
+            max: 100,
+            step: 1,
+            showInput: false,
+            showInputControls: false,
+            showStops: false,
+            showTooltip: true,
+            range: false,
+            vertical: false,
+            placement: "top",
+            disabled: false
         },
         componentFunctions: {
             validate: null,
@@ -91,41 +144,6 @@ export function useCreateDefaultData(): WidgetSliderData {
 }
 
 /**
- * @description 合并滑块静态属性和提示文本格式化函数。
- * @param widgetSliderData 当前滑块节点数据。
- * @param value 当前滑块值；保留该参数用于统一适配签名，格式化脚本按组件回调参数获取刻度值。
- * @returns 新的组件属性对象，不修改原 componentAttributes。
- * @remarks 格式化脚本只获得当前刻度值，不注入整个表单，避免纯展示函数产生不必要的上下文依赖。
- */
-export function useAttributes(widgetSliderData: WidgetSliderData, value?: number | number[]): WidgetSliderData["componentAttributes"] {
-    // 收集由脚本配置动态生成的组件属性函数。
-    const functionAttributes: Record<string, (value: number) => string> = {};
-    if (widgetSliderData.componentFunctions.formatTooltip) {
-        /**
-         * @description 执行滑块提示文本格式化脚本。
-         * @param value 当前刻度值。
-         * @returns 格式化后的提示文本。
-         * @throws 配置脚本语法错误或执行失败时原样抛出。
-         */
-        functionAttributes.formatTooltip = function (value: number) {
-            return new Function("value", widgetSliderData.componentFunctions.formatTooltip as string)(value);
-        };
-    }
-    if (widgetSliderData.componentFunctions.formatValueText) {
-        /**
-         * @description 执行滑块无障碍值文本格式化脚本。
-         * @param value 当前刻度值。
-         * @returns 格式化后的值文本。
-         * @throws 配置脚本语法错误或执行失败时原样抛出。
-         */
-        functionAttributes.formatValueText = function (value: number) {
-            return new Function("value", widgetSliderData.componentFunctions.formatValueText as string)(value);
-        };
-    }
-    return Object.assign({}, widgetSliderData.componentAttributes, functionAttributes);
-}
-
-/**
  * @description 同步滑块设置到字段、表单项、组件属性和函数体。
  * @param widgetSliderData 将被原地更新的滑块节点数据。
  * @param fileName 发生变化的设置字段。
@@ -134,6 +152,8 @@ export function useAttributes(widgetSliderData: WidgetSliderData, value?: number
  * @remarks range、min/max 等配置只改变组件属性，不自动改写已有默认值；动态源码保存为函数体，完整模板继续保留在 settingData。
  */
 export function useSettingDataValueChange(widgetSliderData: WidgetSliderData, fileName: keyof WidgetSliderData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = widgetSliderData.componentAttributes!;
     switch (fileName) {
         case "defaultValue":
         case "propName":
@@ -144,9 +164,8 @@ export function useSettingDataValueChange(widgetSliderData: WidgetSliderData, fi
             widgetSliderData.formAttributes[fileName] = value;
             break;
         case "control":
-            // disabled 控制组件交互，isShow 控制设计器节点，两者来源于同一组复选设置。
-            widgetSliderData.componentAttributes.disabled = value.includes("disabled");
             widgetSliderData.isShow = value.includes("isShow");
+            componentAttributes.disabled = value.includes("disabled");
             break;
         case "min":
         case "max":
@@ -163,25 +182,35 @@ export function useSettingDataValueChange(widgetSliderData: WidgetSliderData, fi
         case "placement":
         case "marks":
         case "persistent":
-            widgetSliderData.componentAttributes[fileName] = value;
+            componentAttributes[fileName] = value;
             break;
         case "required":
         case "requiredMessage":
             break;
         case "formatTooltip":
-            widgetSliderData.componentFunctions.formatTooltip = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSliderData.componentFunctions.formatTooltip = extractFunctionBody(value);
+            if (widgetSliderData.componentFunctions.formatTooltip) {
+                componentAttributes.formatTooltip = createWidgetComponentFunction(widgetSliderData.componentFunctions.formatTooltip, ["value"]);
+            } else {
+                delete componentAttributes.formatTooltip;
+            }
             break;
         case "formatValueText":
-            widgetSliderData.componentFunctions.formatValueText = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSliderData.componentFunctions.formatValueText = extractFunctionBody(value);
+            if (widgetSliderData.componentFunctions.formatValueText) {
+                componentAttributes.formatValueText = createWidgetComponentFunction(widgetSliderData.componentFunctions.formatValueText, ["value"]);
+            } else {
+                delete componentAttributes.formatValueText;
+            }
             break;
         case "onValidate":
-            widgetSliderData.componentFunctions.validate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSliderData.componentFunctions.validate = extractFunctionBody(value);
             break;
         case "onChange":
-            widgetSliderData.componentFunctions.change = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSliderData.componentFunctions.change = extractFunctionBody(value);
             break;
         case "onInput":
-            widgetSliderData.componentFunctions.input = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSliderData.componentFunctions.input = extractFunctionBody(value);
             break;
         default:
             break;

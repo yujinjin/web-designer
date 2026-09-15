@@ -3,10 +3,13 @@
  * @remarks
  * 单日期、日期范围及日期时间模式共用一套数据结构；切换类型时主动清空默认值，避免标量、数组和日期时间格式不兼容造成错误回显。
  * 禁用日期及时分秒规则以可编辑函数模板保存，渲染时才按需包装为组件回调，因此设计数据保持可序列化，也不会为未配置规则创建函数。
- * 动态脚本可读取当前字段值和组件数据，配置必须可信且符合 Element Plus 回调返回约定，异常不会在本模块内被吞掉。
+ * 动态属性脚本严格使用 Element Plus 原生回调参数，配置必须可信且符合回调返回约定，异常不会在本模块内被吞掉。
  */
 import { randomId } from "@yujinjin/utils";
+import { type Dayjs } from "dayjs";
 import { type WidgetDatePickerData, type WidgetFormData } from "@/views/composables/types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { createWidgetComponentFunction, extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的日期选择器稳定 code 与组件库展示元数据。 */
 export const WIDGET_DATE_PICKER = {
@@ -15,6 +18,84 @@ export const WIDGET_DATE_PICKER = {
     description: "选择日期",
     icon: "icon-date-picker"
 };
+
+/**
+ * @description 合并静态日期属性与按需构造的禁用函数。
+ * @param widgetDatePickerData 当前日期选择器节点数据。
+ * @returns 合并静态属性与已配置禁用回调的新对象。
+ * @remarks 动态脚本按 Element Plus 的回调协议注入参数，只应执行可信设计配置。
+ */
+export function useAttributes(widgetDatePickerData: WidgetDatePickerData): NonNullable<WidgetDatePickerData["componentAttributes"]> {
+    // 收集由脚本配置动态生成的组件属性函数。
+    const functionAttributes: Record<
+        string,
+        | ((date: Date) => boolean)
+        | ((role: string, comparingDate?: Dayjs) => number[])
+        | ((hour: number, role: string, comparingDate?: Dayjs) => number[])
+        | ((hour: number, minute: number, role: string, comparingDate?: Dayjs) => number[])
+    > = {};
+    if (widgetDatePickerData.componentFunctions.disabledDate) {
+        /**
+         * @description 判断指定日期是否禁用。
+         * @param date 当前候选日期。
+         * @returns true 表示禁止选择该日期。
+         * @throws 配置脚本语法错误或执行失败时原样抛出。
+         */
+        functionAttributes.disabledDate = function (date: Date) {
+            return new Function("date", widgetDatePickerData.componentFunctions.disabledDate as string)(date);
+        };
+    }
+    if (widgetDatePickerData.componentFunctions.disabledHours) {
+        /**
+         * @description 计算当前面板角色下禁用的小时选项。
+         * @param role 范围选择器的开始或结束面板角色。
+         * @param comparingDate 用于范围比较的另一端日期。
+         * @returns 配置脚本返回的禁用小时集合。
+         * @throws 配置脚本语法错误或执行失败时原样抛出。
+         */
+        functionAttributes.disabledHours = function (role: string, comparingDate?: Dayjs) {
+            return new Function("role", "comparingDate", widgetDatePickerData.componentFunctions.disabledHours as string)(role, comparingDate);
+        };
+    }
+    if (widgetDatePickerData.componentFunctions.disabledMinutes) {
+        /**
+         * @description 计算指定小时下禁用的分钟选项。
+         * @param hour 当前小时。
+         * @param role 范围选择器的开始或结束面板角色。
+         * @param comparingDate 用于范围比较的另一端日期。
+         * @returns 配置脚本返回的禁用分钟集合。
+         * @throws 配置脚本语法错误或执行失败时原样抛出。
+         */
+        functionAttributes.disabledMinutes = function (hour: number, role: string, comparingDate?: Dayjs) {
+            return new Function("hour", "role", "comparingDate", widgetDatePickerData.componentFunctions.disabledMinutes as string)(hour, role, comparingDate);
+        };
+    }
+    if (widgetDatePickerData.componentFunctions.disabledSeconds) {
+        /**
+         * @description 计算指定小时和分钟下禁用的秒选项。
+         * @param hour 当前小时。
+         * @param minute 当前分钟。
+         * @param role 范围选择器的开始或结束面板角色。
+         * @param comparingDate 用于范围比较的另一端日期。
+         * @returns 配置脚本返回的禁用秒集合。
+         * @throws 配置脚本语法错误或执行失败时原样抛出。
+         */
+        functionAttributes.disabledSeconds = function (hour: number, minute: number, role: string, comparingDate?: Dayjs) {
+            return new Function("hour", "minute", "role", "comparingDate", widgetDatePickerData.componentFunctions.disabledSeconds as string)(hour, minute, role, comparingDate);
+        };
+    }
+    return Object.assign(
+        buildDefinedAttributes(
+            widgetDatePickerData.settingData,
+            ["type", "placeholder", "startPlaceholder", "endPlaceholder", "defaultTime", "clearable", "editable", "rangeSeparator", "valueFormat", "format", "dateFormat", "timeFormat"],
+            {
+                disabled: widgetDatePickerData.settingData.control.includes("disabled"),
+                readonly: widgetDatePickerData.settingData.control.includes("readonly")
+            }
+        ),
+        functionAttributes
+    );
+}
 
 /**
  * @description 创建日期组件的独立设计数据。
@@ -40,10 +121,17 @@ export function useCreateDefaultData(): WidgetDatePickerData {
         componentAttributes: {
             type: "date",
             placeholder: "请选择日期",
-            clearable: true,
             startPlaceholder: "开始日期",
             endPlaceholder: "结束日期",
-            valueFormat: "YYYY-MM-DD"
+            clearable: true,
+            editable: true,
+            rangeSeparator: "-",
+            valueFormat: "YYYY-MM-DD",
+            format: "YYYY-MM-DD",
+            dateFormat: "YYYY-MM-DD",
+            timeFormat: "HH:mm:ss",
+            disabled: false,
+            readonly: false
         },
         componentFunctions: {
             validate: null,
@@ -77,17 +165,17 @@ export function useCreateDefaultData(): WidgetDatePickerData {
             rangeSeparator: "-",
             required: false,
             requiredMessage: null,
-            disabledDate: `function disabledDate(date, value) {
-    // 请在这里编写禁用日期函数体逻辑，可直接使用 date, value 参数,返回 true 表示禁用该日期
+            disabledDate: `function disabledDate(date) {
+    // 请在这里编写禁用日期函数体逻辑，可直接使用 date 参数，返回 true 表示禁用该日期
 }`,
-            disabledHours: `function disabledHours(role, comparingDate, value) {
-    // 请在这里编写禁用小时函数体逻辑，可直接使用 role, comparingDate, value 参数,返回数组 表示禁用该小时选项
+            disabledHours: `function disabledHours(role, comparingDate) {
+    // 请在这里编写禁用小时函数体逻辑，可直接使用 role, comparingDate 参数，返回数组表示禁用的小时
 }`,
-            disabledMinutes: `function disabledMinutes(hour, role, comparingDate, value) {
-    // 请在这里编写禁用分钟函数体逻辑，可直接使用 hour, role, comparingDate, value 参数,返回数组 表示禁用该分钟选项
+            disabledMinutes: `function disabledMinutes(hour, role, comparingDate) {
+    // 请在这里编写禁用分钟函数体逻辑，可直接使用 hour, role, comparingDate 参数，返回数组表示禁用的分钟
 }`,
-            disabledSeconds: `function disabledSeconds(hour, minute, role, comparingDate, value) {
-    // 请在这里编写禁用秒数函数体逻辑，可直接使用 hour, minute, role, comparingDate, value 参数,返回数组 表示禁用该秒数选项
+            disabledSeconds: `function disabledSeconds(hour, minute, role, comparingDate) {
+    // 请在这里编写禁用秒数函数体逻辑，可直接使用 hour, minute, role, comparingDate 参数，返回数组表示禁用的秒
 }`,
             onValidate: `function onValidate(value, callback, formData, widgetFormData) {
     // 请在这里编写验证函数体逻辑，可直接使用 value, callback, formData, widgetFormData 参数
@@ -120,6 +208,8 @@ export function useCreateDefaultData(): WidgetDatePickerData {
  * @remarks 类型切换会清空两处默认值，因为单日期、日期范围和日期时间范围的数据形态不兼容。
  */
 export function useSettingDataValueChange(data: WidgetDatePickerData, fileName: keyof WidgetDatePickerData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = data.componentAttributes!;
     switch (fileName) {
         case "defaultValue":
         case "propName":
@@ -130,16 +220,15 @@ export function useSettingDataValueChange(data: WidgetDatePickerData, fileName: 
             data.formAttributes[fileName] = value;
             break;
         case "control":
-            // control 是设置面板组合选项，运行时需拆成组件属性和设计器节点显示状态。
-            data.componentAttributes.disabled = value.includes("disabled");
             data.isShow = value.includes("isShow");
-            data.componentAttributes.readonly = value.includes("readonly");
+            componentAttributes.disabled = value.includes("disabled");
+            componentAttributes.readonly = value.includes("readonly");
             break;
         case "type":
-            data.componentAttributes.type = value || "date";
             // 根级值用于首次渲染，设置态值用于面板回显，两处都清理才能避免重新打开面板时出现失效旧值。
             data.defaultValue = null;
             data.settingData.defaultValue = null;
+            componentAttributes.type = value;
             break;
         case "placeholder":
         case "startPlaceholder":
@@ -151,136 +240,67 @@ export function useSettingDataValueChange(data: WidgetDatePickerData, fileName: 
         case "format":
         case "dateFormat":
         case "timeFormat":
-            data.componentAttributes[fileName] = value;
+        case "clearable":
+            componentAttributes[fileName] = value;
             break;
         case "required":
         case "requiredMessage":
             break;
         case "disabledDate":
-            // 编辑器保存完整函数文本，运行态只保存函数体，useAttributes 再按约定参数包装成真实回调。
-            data.componentFunctions.disabledDate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            // 编辑器保存完整函数文本，运行态只保存函数体，并按 Element Plus 原生参数包装当前属性函数。
+            data.componentFunctions.disabledDate = extractFunctionBody(value);
+            if (data.componentFunctions.disabledDate) {
+                componentAttributes.disabledDate = createWidgetComponentFunction(data.componentFunctions.disabledDate, ["date"]);
+            } else {
+                delete componentAttributes.disabledDate;
+            }
             break;
         case "disabledHours":
-            data.componentFunctions.disabledHours = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.disabledHours = extractFunctionBody(value);
+            if (data.componentFunctions.disabledHours) {
+                componentAttributes.disabledHours = createWidgetComponentFunction(data.componentFunctions.disabledHours, ["role", "comparingDate"]);
+            } else {
+                delete componentAttributes.disabledHours;
+            }
             break;
         case "disabledMinutes":
-            data.componentFunctions.disabledMinutes = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.disabledMinutes = extractFunctionBody(value);
+            if (data.componentFunctions.disabledMinutes) {
+                componentAttributes.disabledMinutes = createWidgetComponentFunction(data.componentFunctions.disabledMinutes, ["hour", "role", "comparingDate"]);
+            } else {
+                delete componentAttributes.disabledMinutes;
+            }
             break;
         case "disabledSeconds":
-            data.componentFunctions.disabledSeconds = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.disabledSeconds = extractFunctionBody(value);
+            if (data.componentFunctions.disabledSeconds) {
+                componentAttributes.disabledSeconds = createWidgetComponentFunction(data.componentFunctions.disabledSeconds, ["hour", "minute", "role", "comparingDate"]);
+            } else {
+                delete componentAttributes.disabledSeconds;
+            }
             break;
         case "onValidate":
-            data.componentFunctions.validate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.validate = extractFunctionBody(value);
             break;
         case "onChange":
-            data.componentFunctions.change = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.change = extractFunctionBody(value);
             break;
         case "onBlur":
-            data.componentFunctions.blur = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.blur = extractFunctionBody(value);
             break;
         case "onFocus":
-            data.componentFunctions.focus = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.focus = extractFunctionBody(value);
             break;
         case "onClear":
-            data.componentFunctions.clear = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.clear = extractFunctionBody(value);
             break;
         case "onVisibleChange":
-            data.componentFunctions.visibleChange = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.visibleChange = extractFunctionBody(value);
             break;
         default:
             break;
     }
     (data.settingData as any)[fileName] = value;
-}
-
-/**
- * @description 合并静态日期属性与按需构造的禁用函数。
- * @param widgetDatePickerData 当前日期选择器节点数据。
- * @param value 当前字段值，供禁用日期脚本读取。
- * @returns 合并静态属性与已配置禁用回调的新对象。
- * @remarks 动态脚本按 Element Plus 的回调协议注入参数，只应执行可信设计配置。
- */
-export function useAttributes(widgetDatePickerData: WidgetDatePickerData, value: Date | string | number | Array<Date | string | number> | null): WidgetDatePickerData["componentAttributes"] {
-    // 收集由脚本配置动态生成的组件属性函数。
-    const functionAttributes: Record<
-        string,
-        | ((date: Date) => boolean)
-        | ((role: string, comparingDate: Date, value: string | number) => boolean)
-        | ((hour: number, role: string, comparingDate: Date, value: string | number) => boolean)
-        | ((hour: number, minute: number, role: string, comparingDate: Date, value: string | number) => boolean)
-    > = {};
-    if (widgetDatePickerData.componentFunctions.disabledDate) {
-        /**
-         * @description 判断指定日期是否禁用。
-         * @param date 当前候选日期。
-         * @returns true 表示禁止选择该日期。
-         * @throws 配置脚本语法错误或执行失败时原样抛出。
-         */
-        functionAttributes.disabledDate = function (date: Date) {
-            return new Function("date", "value", "widgetDatePickerData", widgetDatePickerData.componentFunctions.disabledDate as string)(date, value, widgetDatePickerData);
-        };
-    }
-    if (widgetDatePickerData.componentFunctions.disabledHours) {
-        /**
-         * @description 计算当前面板角色下禁用的小时选项。
-         * @param role 范围选择器的开始或结束面板角色。
-         * @param comparingDate 用于范围比较的另一端日期。
-         * @param value Element Plus 回调提供的当前值。
-         * @returns 配置脚本返回的禁用小时集合。
-         * @throws 配置脚本语法错误或执行失败时原样抛出。
-         */
-        functionAttributes.disabledHours = function (role: string, comparingDate: Date, value: string | number) {
-            return new Function("role", "comparingDate", "value", "widgetDatePickerData", widgetDatePickerData.componentFunctions.disabledHours as string)(
-                role,
-                comparingDate,
-                value,
-                widgetDatePickerData
-            );
-        };
-    }
-    if (widgetDatePickerData.componentFunctions.disabledMinutes) {
-        /**
-         * @description 计算指定小时下禁用的分钟选项。
-         * @param hour 当前小时。
-         * @param role 范围选择器的开始或结束面板角色。
-         * @param comparingDate 用于范围比较的另一端日期。
-         * @param value Element Plus 回调提供的当前值。
-         * @returns 配置脚本返回的禁用分钟集合。
-         * @throws 配置脚本语法错误或执行失败时原样抛出。
-         */
-        functionAttributes.disabledMinutes = function (hour: number, role: string, comparingDate: Date, value: string | number) {
-            return new Function("hour", "role", "comparingDate", "value", "widgetDatePickerData", widgetDatePickerData.componentFunctions.disabledMinutes as string)(
-                hour,
-                role,
-                comparingDate,
-                value,
-                widgetDatePickerData
-            );
-        };
-    }
-    if (widgetDatePickerData.componentFunctions.disabledSeconds) {
-        /**
-         * @description 计算指定小时和分钟下禁用的秒选项。
-         * @param hour 当前小时。
-         * @param minute 当前分钟。
-         * @param role 范围选择器的开始或结束面板角色。
-         * @param comparingDate 用于范围比较的另一端日期。
-         * @param value Element Plus 回调提供的当前值。
-         * @returns 配置脚本返回的禁用秒集合。
-         * @throws 配置脚本语法错误或执行失败时原样抛出。
-         */
-        functionAttributes.disabledSeconds = function (hour: number, minute: number, role: string, comparingDate: Date, value: string | number) {
-            return new Function("hour", "minute", "role", "comparingDate", "value", "widgetDatePickerData", widgetDatePickerData.componentFunctions.disabledSeconds as string)(
-                hour,
-                minute,
-                role,
-                comparingDate,
-                value,
-                widgetDatePickerData
-            );
-        };
-    }
-    return Object.assign({}, widgetDatePickerData.componentAttributes, functionAttributes);
 }
 
 /**

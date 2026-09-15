@@ -6,6 +6,8 @@
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetFormData, type WidgetCheckboxGroupData } from "../types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的复选组稳定 code 与组件库展示元数据。 */
 export const WIDGET_CHECKBOX_GROUP = {
@@ -16,6 +18,17 @@ export const WIDGET_CHECKBOX_GROUP = {
 };
 
 /**
+ * @description 获取复选组运行态属性。
+ * @param widgetCheckboxGroupData 当前复选组节点数据。
+ * @returns 从选项、数量限制、样式和 control 完整构建的新属性对象。
+ */
+export function useAttributes(widgetCheckboxGroupData: WidgetCheckboxGroupData): NonNullable<WidgetCheckboxGroupData["componentAttributes"]> {
+    return buildDefinedAttributes(widgetCheckboxGroupData.settingData, ["options", "type", "min", "max", "textColor", "fill"], {
+        disabled: widgetCheckboxGroupData.settingData.control.includes("disabled")
+    });
+}
+
+/**
  * @description 创建复选组独立数据。
  * @returns 相互隔离的新复选组节点数据。
  * @remarks 默认值必须是与选项 value 类型一致的数组，空数组表示尚未选择。
@@ -23,6 +36,12 @@ export const WIDGET_CHECKBOX_GROUP = {
 export function useCreateDefaultData(): WidgetCheckboxGroupData {
     // 根据组件 code 生成当前设计节点的唯一 ID。
     const id = WIDGET_CHECKBOX_GROUP.code.replace(/-/g, "_") + "_" + randomId();
+    // 默认选项由设置态和运行属性共享，后续设置更新会同时替换两处引用。
+    const options = [
+        { value: "1", label: "选项1" },
+        { value: "2", label: "选项2" },
+        { value: "3", label: "选项3", disabled: true }
+    ];
     return {
         id: id,
         code: WIDGET_CHECKBOX_GROUP.code,
@@ -37,12 +56,9 @@ export function useCreateDefaultData(): WidgetCheckboxGroupData {
             labelPosition: "left"
         },
         componentAttributes: {
-            options: [
-                { value: "1", label: "选项1" },
-                { value: "2", label: "选项2" },
-                { value: "3", label: "选项3", disabled: true }
-            ],
-            type: "checkbox"
+            options,
+            type: "checkbox",
+            disabled: false
         },
         componentFunctions: {
             validate: null,
@@ -52,11 +68,7 @@ export function useCreateDefaultData(): WidgetCheckboxGroupData {
             propName: id,
             label: WIDGET_CHECKBOX_GROUP.name,
             labelPosition: "left",
-            options: [
-                { value: "1", label: "选项1" },
-                { value: "2", label: "选项2" },
-                { value: "3", label: "选项3", disabled: true }
-            ],
+            options,
             defaultValue: [],
             control: [],
             type: "checkbox",
@@ -77,15 +89,6 @@ export function useCreateDefaultData(): WidgetCheckboxGroupData {
 }
 
 /**
- * @description 获取复选组运行态属性。
- * @param widgetCheckboxGroupData 当前复选组节点数据。
- * @returns componentAttributes 原始引用；选项、最少和最多选择数均已由设置同步函数写入。
- */
-export function useAttributes(widgetCheckboxGroupData: WidgetCheckboxGroupData): WidgetCheckboxGroupData["componentAttributes"] {
-    return widgetCheckboxGroupData.componentAttributes;
-}
-
-/**
  * @description 同步复选组设置到字段、表单项、组件属性及动态函数体。
  * @param widgetCheckboxGroupData 将被原地更新的复选组节点数据。
  * @param fileName 发生变化的设置字段。
@@ -94,21 +97,24 @@ export function useAttributes(widgetCheckboxGroupData: WidgetCheckboxGroupData):
  * @remarks min/max 只限制交互选择数量，不会自动修剪已经保存的默认值，配置者需要自行保证默认数组合法。
  */
 export function useSettingDataValueChange(widgetCheckboxGroupData: WidgetCheckboxGroupData, fileName: keyof WidgetCheckboxGroupData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = widgetCheckboxGroupData.componentAttributes!;
     switch (fileName) {
         case "propName":
+            widgetCheckboxGroupData.propName = value;
+            break;
         case "defaultValue":
             // Element Plus 复选组只接受数组；设置面板清空时也必须保持该模型不变量。
             value = Array.isArray(value) ? value : [];
-            widgetCheckboxGroupData[fileName] = value;
+            widgetCheckboxGroupData.defaultValue = value;
             break;
         case "label":
         case "labelPosition":
             widgetCheckboxGroupData.formAttributes[fileName] = value;
             break;
         case "control":
-            // control 的可见性和禁用状态分别落在节点数据与组件属性中。
-            widgetCheckboxGroupData.componentAttributes.disabled = value.includes("disabled");
             widgetCheckboxGroupData.isShow = value.includes("isShow");
+            componentAttributes.disabled = value.includes("disabled");
             break;
         case "options":
         case "type":
@@ -116,16 +122,16 @@ export function useSettingDataValueChange(widgetCheckboxGroupData: WidgetCheckbo
         case "max":
         case "textColor":
         case "fill":
-            widgetCheckboxGroupData.componentAttributes[fileName] = value;
+            componentAttributes[fileName] = value;
             break;
         case "required":
         case "requiredMessage":
             break;
         case "onValidate":
-            widgetCheckboxGroupData.componentFunctions.validate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetCheckboxGroupData.componentFunctions.validate = extractFunctionBody(value);
             break;
         case "onChange":
-            widgetCheckboxGroupData.componentFunctions.change = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetCheckboxGroupData.componentFunctions.change = extractFunctionBody(value);
             break;
         default:
             break;

@@ -6,6 +6,8 @@
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetFormData, type WidgetRateData } from "../types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的评分组件稳定 code 与组件库展示元数据。 */
 export const WIDGET_RATE = {
@@ -14,6 +16,17 @@ export const WIDGET_RATE = {
     description: "评分",
     icon: "icon-rate"
 };
+
+/**
+ * @description 获取评分组件运行态属性。
+ * @param widgetRateData 当前评分节点数据。
+ * @returns 从评分设置和 control 完整构建的新属性对象。
+ */
+export function useAttributes(widgetRateData: WidgetRateData): NonNullable<WidgetRateData["componentAttributes"]> {
+    return buildDefinedAttributes(widgetRateData.settingData, ["max", "allowHalf", "lowThreshold", "highThreshold", "showText", "showScore", "textColor", "clearable"], {
+        disabled: widgetRateData.settingData.control.includes("disabled")
+    });
+}
 
 /**
  * @description 创建评分组件独立数据。
@@ -37,7 +50,14 @@ export function useCreateDefaultData(): WidgetRateData {
             labelPosition: "left"
         },
         componentAttributes: {
-            max: 5
+            max: 5,
+            allowHalf: false,
+            lowThreshold: 2,
+            highThreshold: 4,
+            showText: true,
+            showScore: true,
+            clearable: true,
+            disabled: false
         },
         componentFunctions: {
             validate: null,
@@ -78,6 +98,8 @@ export function useCreateDefaultData(): WidgetRateData {
  * @remarks lowThreshold/highThreshold 由 Element Plus 解释颜色分段，当前层保留用户值，不自动交换或限制顺序。
  */
 export function useSettingDataValueChange(widgetRateData: WidgetRateData, fileName: keyof WidgetRateData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = widgetRateData.componentAttributes!;
     switch (fileName) {
         case "defaultValue":
         case "propName":
@@ -88,8 +110,8 @@ export function useSettingDataValueChange(widgetRateData: WidgetRateData, fileNa
             widgetRateData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetRateData.componentAttributes.disabled = value.includes("disabled");
             widgetRateData.isShow = value.includes("isShow");
+            componentAttributes.disabled = value.includes("disabled");
             break;
         case "allowHalf":
         case "lowThreshold":
@@ -99,30 +121,21 @@ export function useSettingDataValueChange(widgetRateData: WidgetRateData, fileNa
         case "max":
         case "textColor":
         case "clearable":
-            widgetRateData.componentAttributes[fileName] = value;
+            componentAttributes[fileName] = value;
             break;
         case "required":
         case "requiredMessage":
             break;
         case "onValidate":
-            widgetRateData.componentFunctions.validate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetRateData.componentFunctions.validate = extractFunctionBody(value);
             break;
         case "onChange":
-            widgetRateData.componentFunctions.change = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetRateData.componentFunctions.change = extractFunctionBody(value);
             break;
         default:
             break;
     }
     (widgetRateData.settingData as any)[fileName] = value;
-}
-
-/**
- * @description 获取评分组件运行态属性。
- * @param widgetRateData 当前评分节点数据。
- * @returns componentAttributes 原始引用；调用方约定只读消费。
- */
-export function useAttributes(widgetRateData: WidgetRateData): WidgetRateData["componentAttributes"] {
-    return widgetRateData.componentAttributes;
 }
 
 /**

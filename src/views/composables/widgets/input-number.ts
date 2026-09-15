@@ -6,6 +6,8 @@
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetFormData, type WidgetInputNumberData } from "@/views/composables/types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的数字输入稳定 code 与组件库展示元数据。 */
 export const WIDGET_INPUT_NUMBER = {
@@ -14,6 +16,19 @@ export const WIDGET_INPUT_NUMBER = {
     description: "普通的输入数字组件",
     icon: "icon-input-number"
 };
+
+/**
+ * @description 获取数字输入运行态属性。
+ * @param widgetInputNumberData 当前数字输入节点数据。
+ * @returns 从设置源完整构建的新属性对象。
+ */
+export function useAttributes(widgetInputNumberData: WidgetInputNumberData): NonNullable<WidgetInputNumberData["componentAttributes"]> {
+    return buildDefinedAttributes(widgetInputNumberData.settingData, ["placeholder", "min", "max", "stepStrictly", "step", "precision", "controls", "controlsPosition", "align"], {
+        disabled: widgetInputNumberData.settingData.control.includes("disabled"),
+        readonly: widgetInputNumberData.settingData.control.includes("readonly"),
+        disabledScientific: true
+    });
+}
 
 /**
  * @description 创建数字输入组件独立数据。
@@ -38,6 +53,12 @@ export function useCreateDefaultData(): WidgetInputNumberData {
         },
         componentAttributes: {
             placeholder: "请输入",
+            stepStrictly: false,
+            step: 1,
+            controls: true,
+            align: "center",
+            disabled: false,
+            readonly: false,
             disabledScientific: true
         },
         componentFunctions: {
@@ -88,6 +109,8 @@ export function useCreateDefaultData(): WidgetInputNumberData {
  * @remarks 默认值和 propName 属于字段根级数据，标签属于表单项，其余数值交互配置属于组件属性。required 只由统一表单规则生成器读取。
  */
 export function useSettingDataValueChange(data: WidgetInputNumberData, fileName: keyof WidgetInputNumberData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = data.componentAttributes!;
     switch (fileName) {
         case "defaultValue":
         case "propName":
@@ -98,10 +121,9 @@ export function useSettingDataValueChange(data: WidgetInputNumberData, fileName:
             data.formAttributes[fileName] = value;
             break;
         case "control":
-            // readonly 虽不是所有 Element Plus 版本的正式 InputNumber 属性，仍按现有设计数据透传以兼容项目封装。
-            data.componentAttributes.disabled = value.includes("disabled");
             data.isShow = value.includes("isShow");
-            data.componentAttributes.readonly = value.includes("readonly");
+            componentAttributes.disabled = value.includes("disabled");
+            componentAttributes.readonly = value.includes("readonly");
             break;
         case "placeholder":
         case "min":
@@ -112,37 +134,28 @@ export function useSettingDataValueChange(data: WidgetInputNumberData, fileName:
         case "controls":
         case "controlsPosition":
         case "align":
-            data.componentAttributes[fileName] = value;
+            componentAttributes[fileName] = value;
             break;
         case "required":
         case "requiredMessage":
             break;
         case "onValidate":
             // 只保存函数体；完整源码继续留在 settingData 供代码编辑器回显。
-            data.componentFunctions.validate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.validate = extractFunctionBody(value);
             break;
         case "onBlur":
-            data.componentFunctions.blur = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.blur = extractFunctionBody(value);
             break;
         case "onFocus":
-            data.componentFunctions.focus = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.focus = extractFunctionBody(value);
             break;
         case "onChange":
-            data.componentFunctions.change = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.change = extractFunctionBody(value);
             break;
         default:
             break;
     }
     (data.settingData as any)[fileName] = value;
-}
-
-/**
- * @description 获取数字输入运行态属性。
- * @param widgetInputNumberData 当前数字输入节点数据。
- * @returns componentAttributes 原始引用；调用方约定只读使用。
- */
-export function useAttributes(widgetInputNumberData: WidgetInputNumberData): WidgetInputNumberData["componentAttributes"] {
-    return widgetInputNumberData.componentAttributes;
 }
 
 /**

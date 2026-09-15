@@ -3,10 +3,12 @@
  * @remarks
  * 它不同于 time-picker：只处理格式化后的离散字符串，不支持范围数组；默认值需要落在生成列表中才能正常回显。
  * 时间格式合法性和步长解析交由 Element Plus 处理，本模块保持配置原文以便设置面板再次编辑。
- * 初始 componentAttributes.format 为 `HH:mm:ss`，settingData.format 为 `HH:mm`；首次修改格式前两处并不一致，维护默认值时需要同时核对。
+ * 运行属性完全由 settingData 构建，避免格式默认值在设置态与缓存中出现两套来源。
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetTimeSelectData, type WidgetFormData } from "@/views/composables/types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的固定时间选项组件稳定 code 与组件库展示元数据。 */
 export const WIDGET_TIME_SELECT = {
@@ -15,6 +17,17 @@ export const WIDGET_TIME_SELECT = {
     description: "选择时间",
     icon: "icon-time-select"
 };
+
+/**
+ * @description 获取时间选项组件运行态属性。
+ * @param widgetTimeSelectData 当前时间选项节点数据。
+ * @returns 从时间范围、格式和 control 完整构建的新属性对象。
+ */
+export function useAttributes(widgetTimeSelectData: WidgetTimeSelectData): NonNullable<WidgetTimeSelectData["componentAttributes"]> {
+    return buildDefinedAttributes(widgetTimeSelectData.settingData, ["clearable", "placeholder", "format", "editable", "start", "end", "step", "minTime", "maxTime", "includeEndTime"], {
+        disabled: widgetTimeSelectData.settingData.control.includes("disabled")
+    });
+}
 
 /**
  * @description 创建固定步长时间选项组件数据。
@@ -38,8 +51,15 @@ export function useCreateDefaultData(): WidgetTimeSelectData {
             labelPosition: "left"
         },
         componentAttributes: {
+            clearable: true,
             placeholder: "请选择时间",
-            format: "HH:mm:ss"
+            format: "HH:mm",
+            editable: true,
+            start: "09:00",
+            end: "18:00",
+            step: "00:30",
+            includeEndTime: false,
+            disabled: false
         },
         componentFunctions: {
             validate: null,
@@ -94,6 +114,8 @@ export function useCreateDefaultData(): WidgetTimeSelectData {
  * @remarks 本组件与 time-picker 不同，只处理格式化后的字符串选项，不支持时间范围数组。
  */
 export function useSettingDataValueChange(data: WidgetTimeSelectData, fileName: keyof WidgetTimeSelectData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = data.componentAttributes!;
     switch (fileName) {
         case "defaultValue":
         case "propName":
@@ -104,9 +126,8 @@ export function useSettingDataValueChange(data: WidgetTimeSelectData, fileName: 
             data.formAttributes[fileName] = value;
             break;
         case "control":
-            // control 拆分为组件禁用状态和设计器节点可见性。
-            data.componentAttributes.disabled = value.includes("disabled");
             data.isShow = value.includes("isShow");
+            componentAttributes.disabled = value.includes("disabled");
             break;
         case "clearable":
         case "placeholder":
@@ -118,39 +139,30 @@ export function useSettingDataValueChange(data: WidgetTimeSelectData, fileName: 
         case "minTime":
         case "maxTime":
         case "includeEndTime":
-            data.componentAttributes[fileName] = value;
+            componentAttributes[fileName] = value;
             break;
         case "required":
         case "requiredMessage":
             break;
         case "onValidate":
-            data.componentFunctions.validate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.validate = extractFunctionBody(value);
             break;
         case "onChange":
-            data.componentFunctions.change = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.change = extractFunctionBody(value);
             break;
         case "onBlur":
-            data.componentFunctions.blur = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.blur = extractFunctionBody(value);
             break;
         case "onFocus":
-            data.componentFunctions.focus = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.focus = extractFunctionBody(value);
             break;
         case "onClear":
-            data.componentFunctions.clear = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.clear = extractFunctionBody(value);
             break;
         default:
             break;
     }
     (data.settingData as any)[fileName] = value;
-}
-
-/**
- * @description 获取时间选项组件运行态属性。
- * @param widgetTimeSelectData 当前时间选项节点数据。
- * @returns componentAttributes 原始引用；start/end/step 的格式合法性由 Element Plus 解析。
- */
-export function useAttributes(widgetTimeSelectData: WidgetTimeSelectData): WidgetTimeSelectData["componentAttributes"] {
-    return widgetTimeSelectData.componentAttributes;
 }
 
 /**

@@ -6,6 +6,7 @@
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetDividerData } from "../types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
 
 /** 注册表使用的分隔线稳定 code 与组件库展示元数据。 */
 export const WIDGET_DIVIDER = {
@@ -14,6 +15,15 @@ export const WIDGET_DIVIDER = {
     description: "分隔线组件",
     icon: "icon-divider"
 };
+
+/**
+ * @description 获取分隔线的运行态样式属性。
+ * @param widgetDividerData 当前分隔线节点数据。
+ * @returns 从方向、边框和内容位置完整构建的新属性对象。
+ */
+export function useAttributes(widgetDividerData: WidgetDividerData): NonNullable<WidgetDividerData["componentAttributes"]> {
+    return buildDefinedAttributes(widgetDividerData.settingData, ["direction", "borderStyle", "contentPosition"]);
+}
 
 /**
  * @description 创建分隔线组件数据。
@@ -31,7 +41,9 @@ export function useCreateDefaultData(): WidgetDividerData {
         defaultValue: null,
         propName: id,
         componentAttributes: {
-            direction: "horizontal"
+            direction: "horizontal",
+            borderStyle: "solid",
+            contentPosition: "center"
         },
         settingData: {
             propName: id,
@@ -45,15 +57,6 @@ export function useCreateDefaultData(): WidgetDividerData {
 }
 
 /**
- * @description 获取分隔线的运行态样式属性。
- * @param widgetDividerData 当前分隔线节点数据。
- * @returns componentAttributes 原始引用；显示文案由渲染器单独读取 defaultValue。
- */
-export function useAttributes(widgetDividerData: WidgetDividerData): WidgetDividerData["componentAttributes"] {
-    return widgetDividerData.componentAttributes;
-}
-
-/**
  * @description 同步分隔线文案、显示状态和样式。
  * @param widgetDividerData 将被原地更新的分隔线节点数据。
  * @param fileName 发生变化的设置字段。
@@ -62,6 +65,8 @@ export function useAttributes(widgetDividerData: WidgetDividerData): WidgetDivid
  * @remarks 展示组件不生成事件或校验规则。
  */
 export function useSettingDataValueChange(widgetDividerData: WidgetDividerData, fileName: keyof WidgetDividerData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = widgetDividerData.componentAttributes!;
     switch (fileName) {
         case "propName":
             widgetDividerData.propName = value;
@@ -76,7 +81,7 @@ export function useSettingDataValueChange(widgetDividerData: WidgetDividerData, 
         case "direction":
         case "borderStyle":
         case "contentPosition":
-            widgetDividerData.componentAttributes[fileName] = value;
+            componentAttributes[fileName] = value;
             break;
     }
     (widgetDividerData.settingData as any)[fileName] = value;

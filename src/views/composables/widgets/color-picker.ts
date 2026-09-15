@@ -6,6 +6,8 @@
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetColorPickerData, type WidgetFormData } from "../types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的颜色选择器稳定 code 与组件库展示元数据。 */
 export const WIDGET_COLOR_PICKER = {
@@ -14,6 +16,17 @@ export const WIDGET_COLOR_PICKER = {
     description: "颜色选择",
     icon: "icon-color-picker"
 };
+
+/**
+ * @description 获取颜色选择器运行态属性。
+ * @param widgetColorPickerData 当前颜色选择器节点数据。
+ * @returns 从颜色格式、透明度和 control 完整构建的新属性对象。
+ */
+export function useAttributes(widgetColorPickerData: WidgetColorPickerData): NonNullable<WidgetColorPickerData["componentAttributes"]> {
+    return buildDefinedAttributes(widgetColorPickerData.settingData, ["clearable", "showAlpha", "colorFormat"], {
+        disabled: widgetColorPickerData.settingData.control.includes("disabled")
+    });
+}
 
 /**
  * @description 创建颜色选择器独立数据。
@@ -37,7 +50,10 @@ export function useCreateDefaultData(): WidgetColorPickerData {
             required: false
         },
         componentAttributes: {
-            clearable: false
+            clearable: false,
+            showAlpha: false,
+            colorFormat: "hex",
+            disabled: false
         },
         componentFunctions: {
             validate: null,
@@ -81,15 +97,6 @@ export function useCreateDefaultData(): WidgetColorPickerData {
 }
 
 /**
- * @description 获取颜色选择器运行态属性。
- * @param widgetColorPickerData 当前颜色选择器节点数据。
- * @returns componentAttributes 原始引用；渲染层不得直接修改。
- */
-export function useAttributes(widgetColorPickerData: WidgetColorPickerData): WidgetColorPickerData["componentAttributes"] {
-    return widgetColorPickerData.componentAttributes;
-}
-
-/**
  * @description 同步颜色设置和动态事件函数体。
  * @param widgetColorPickerData 将被原地更新的颜色选择器节点数据。
  * @param fileName 发生变化的设置字段。
@@ -98,7 +105,8 @@ export function useAttributes(widgetColorPickerData: WidgetColorPickerData): Wid
  * @remarks colorFormat 或透明度模式变化不会转换已有颜色值，配置者需保证默认值与目标格式兼容，否则组件可能回显为空。
  */
 export function useSettingDataValueChange(widgetColorPickerData: WidgetColorPickerData, fileName: keyof WidgetColorPickerData["settingData"], value: any) {
-    console.log(fileName, value);
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = widgetColorPickerData.componentAttributes!;
     switch (fileName) {
         case "propName":
             widgetColorPickerData.propName = value;
@@ -108,35 +116,34 @@ export function useSettingDataValueChange(widgetColorPickerData: WidgetColorPick
             widgetColorPickerData.formAttributes[fileName] = value;
             break;
         case "control":
-            // 设置面板将禁用与可见性合并展示，运行态需分别写入组件属性和节点状态。
-            widgetColorPickerData.componentAttributes.disabled = value.includes("disabled");
             widgetColorPickerData.isShow = value.includes("isShow");
+            componentAttributes.disabled = value.includes("disabled");
             break;
         case "clearable":
         case "showAlpha":
         case "colorFormat":
-            widgetColorPickerData.componentAttributes[fileName] = value;
+            componentAttributes[fileName] = value;
             break;
         case "required":
         case "requiredMessage":
             break;
         case "onValidate":
-            widgetColorPickerData.componentFunctions.validate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetColorPickerData.componentFunctions.validate = extractFunctionBody(value);
             break;
         case "onChange":
-            widgetColorPickerData.componentFunctions.change = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetColorPickerData.componentFunctions.change = extractFunctionBody(value);
             break;
         case "onActiveChange":
-            widgetColorPickerData.componentFunctions.activeChange = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetColorPickerData.componentFunctions.activeChange = extractFunctionBody(value);
             break;
         case "onBlur":
-            widgetColorPickerData.componentFunctions.blur = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetColorPickerData.componentFunctions.blur = extractFunctionBody(value);
             break;
         case "onFocus":
-            widgetColorPickerData.componentFunctions.focus = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetColorPickerData.componentFunctions.focus = extractFunctionBody(value);
             break;
         case "onClear":
-            widgetColorPickerData.componentFunctions.clear = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetColorPickerData.componentFunctions.clear = extractFunctionBody(value);
             break;
         default:
             break;

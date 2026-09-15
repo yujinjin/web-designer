@@ -6,6 +6,8 @@
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetFormData, type WidgetSwitchData } from "../types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { createAsyncWidgetComponentFunction, extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的开关稳定 code 与组件库展示元数据。 */
 export const WIDGET_SWITCH = {
@@ -14,6 +16,34 @@ export const WIDGET_SWITCH = {
     description: "开关",
     icon: "icon-switch"
 };
+
+/**
+ * @description 合并开关静态属性与异步 beforeChange。
+ * @param widgetSwitchData 当前开关节点数据。
+ * @returns 新的组件属性对象，不修改原 componentAttributes。
+ * @remarks beforeChange 严格遵循 Element Plus 的零参数协议；脚本拒绝或抛错会阻止切换并由组件调用链处理。
+ */
+export function useAttributes(widgetSwitchData: WidgetSwitchData): NonNullable<WidgetSwitchData["componentAttributes"]> {
+    // 收集由脚本配置动态生成的组件属性函数和值。
+    const functionAttributes: Record<string, (() => Promise<boolean>) | boolean> = {};
+    if (widgetSwitchData.componentFunctions.beforeChange) {
+        /**
+         * @description 执行切换前拦截脚本。
+         * @returns 是否允许本次切换的异步结果。
+         * @throws 配置脚本语法错误、执行失败或 Promise 拒绝时原样传播。
+         */
+        functionAttributes.beforeChange = async function () {
+            return new Function(widgetSwitchData.componentFunctions.beforeChange as string)();
+        };
+    }
+    return Object.assign(
+        buildDefinedAttributes(widgetSwitchData.settingData, ["activeText", "inactiveText", "inlinePrompt"], {
+            disabled: widgetSwitchData.settingData.control.includes("disabled"),
+            loading: false
+        }),
+        functionAttributes
+    );
+}
 
 /**
  * @description 创建开关独立数据。
@@ -37,6 +67,7 @@ export function useCreateDefaultData(): WidgetSwitchData {
             labelPosition: "left"
         },
         componentAttributes: {
+            disabled: false,
             loading: false
         },
         componentFunctions: {
@@ -55,8 +86,8 @@ export function useCreateDefaultData(): WidgetSwitchData {
             required: false,
             requiredMessage: null,
             inlinePrompt: null,
-            beforeChange: `async function beforeChange(value) {
-    // 请在这里编写改变事件处理函数体逻辑，可直接使用 value 参数
+            beforeChange: `async function beforeChange() {
+    // 请在这里编写切换前处理逻辑，返回 true 允许切换，返回 false 阻止切换
 }`,
             onValidate: `function onValidate(value, callback, formData, widgetFormData) {
     // 请在这里编写验证函数体逻辑，可直接使用 value, callback, formData, widgetFormData 参数
@@ -74,9 +105,11 @@ export function useCreateDefaultData(): WidgetSwitchData {
  * @param fileName 发生变化的设置字段。
  * @param value 设置字段的新值。
  * @returns 无返回值。
- * @remarks `beforeChange` 与普通事件不同，它是决定本次切换能否继续的组件属性函数，因此由 useAttributes 包装。
+ * @remarks `beforeChange` 与普通事件不同，它是决定本次切换能否继续的组件属性函数，因此设置变化时必须同步更新对应运行属性。
  */
 export function useSettingDataValueChange(widgetSwitchData: WidgetSwitchData, fileName: keyof WidgetSwitchData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = widgetSwitchData.componentAttributes!;
     switch (fileName) {
         case "defaultValue":
         case "propName":
@@ -87,54 +120,36 @@ export function useSettingDataValueChange(widgetSwitchData: WidgetSwitchData, fi
             widgetSwitchData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetSwitchData.componentAttributes.disabled = value.includes("disabled");
             widgetSwitchData.isShow = value.includes("isShow");
+            componentAttributes.disabled = value.includes("disabled");
             break;
         case "activeText":
         case "inactiveText":
         case "inlinePrompt":
-            widgetSwitchData.componentAttributes[fileName] = value;
+            componentAttributes[fileName] = value;
             break;
         case "required":
         case "requiredMessage":
             break;
         case "beforeChange":
             // 设置态保留 async 函数声明，运行态只保留函数体；返回值必须满足 Element Plus 的 boolean/Promise<boolean> 约定。
-            widgetSwitchData.componentFunctions.beforeChange = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSwitchData.componentFunctions.beforeChange = extractFunctionBody(value);
+            if (widgetSwitchData.componentFunctions.beforeChange) {
+                componentAttributes.beforeChange = createAsyncWidgetComponentFunction(widgetSwitchData.componentFunctions.beforeChange, []);
+            } else {
+                delete componentAttributes.beforeChange;
+            }
             break;
         case "onValidate":
-            widgetSwitchData.componentFunctions.validate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSwitchData.componentFunctions.validate = extractFunctionBody(value);
             break;
         case "onChange":
-            widgetSwitchData.componentFunctions.change = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSwitchData.componentFunctions.change = extractFunctionBody(value);
             break;
         default:
             break;
     }
     (widgetSwitchData.settingData as any)[fileName] = value;
-}
-
-/**
- * @description 合并开关静态属性与异步 beforeChange。
- * @param widgetSwitchData 当前开关节点数据。
- * @param value 当前开关值，供 beforeChange 脚本判断。
- * @returns 新的组件属性对象，不修改原 componentAttributes。
- * @remarks 当前值通过闭包注入脚本；脚本拒绝或抛错会阻止切换并由组件调用链处理，本层不转换为允许状态。
- */
-export function useAttributes(widgetSwitchData: WidgetSwitchData, value: number | string | boolean): WidgetSwitchData["componentAttributes"] {
-    // 收集由脚本配置动态生成的组件属性函数和值。
-    const functionAttributes: Record<string, (() => Promise<boolean>) | boolean> = {};
-    if (widgetSwitchData.componentFunctions.beforeChange) {
-        /**
-         * @description 执行切换前拦截脚本。
-         * @returns 是否允许本次切换的异步结果。
-         * @throws 配置脚本语法错误、执行失败或 Promise 拒绝时原样传播。
-         */
-        functionAttributes.beforeChange = async function () {
-            return (await new Function("value", widgetSwitchData.componentFunctions.beforeChange as string)(value)) as Promise<boolean>;
-        };
-    }
-    return Object.assign({}, widgetSwitchData.componentAttributes, functionAttributes);
 }
 
 /**

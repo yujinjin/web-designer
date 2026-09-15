@@ -4,6 +4,8 @@
  */
 import { randomId } from "@yujinjin/utils";
 import { type CascaderOption, type CascaderParseFailure, type CascaderParseResult, type WidgetCascaderData, type WidgetFormData } from "@/views/composables/types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的级联选择器稳定 code 与组件库展示元数据。 */
 export const WIDGET_CASCADER = {
@@ -101,12 +103,32 @@ export const parseCascaderOptionsJson = function (text: string): CascaderParseRe
 };
 
 /**
+ * @description 获取不包含运行时选项树的级联选择器属性。
+ * @param widgetData 当前级联选择器节点数据。
+ * @returns 组件属性的浅拷贝，嵌套 props 同样复制以隔离调用方修改。
+ */
+export function useAttributes(widgetData: WidgetCascaderData): Record<string, any> {
+    const settingData = widgetData.settingData;
+    return buildDefinedAttributes(settingData, ["placeholder", "clearable", "filterable", "showAllLevels", "collapseTags", "maxCollapseTags", "collapseTagsTooltip", "separator"], {
+        disabled: settingData.control.includes("disabled"),
+        options: settingData.options,
+        props: {
+            multiple: settingData.multiple,
+            checkStrictly: settingData.checkStrictly,
+            emitPath: settingData.emitPath,
+            expandTrigger: settingData.expandTrigger
+        }
+    });
+}
+
+/**
  * @description 创建级联选择器默认数据。
  * @returns 包含独立本地树引用的新组件数据。
  */
 export function useCreateDefaultData(): WidgetCascaderData {
     // 根据组件 code 生成当前设计节点的唯一 ID。
     const id = WIDGET_CASCADER.code.replace(/-/g, "_") + "_" + randomId();
+    // 默认级联树由设置态和运行属性共享，后续合法 JSON 更新会同时替换两处引用。
     const options = [
         {
             label: "浙江省",
@@ -140,13 +162,14 @@ export function useCreateDefaultData(): WidgetCascaderData {
         },
         componentAttributes: {
             placeholder: "请选择",
-            disabled: false,
             clearable: true,
             filterable: false,
             showAllLevels: true,
             collapseTags: false,
             collapseTagsTooltip: false,
             separator: " / ",
+            disabled: false,
+            options,
             props: {
                 multiple: false,
                 checkStrictly: false,
@@ -215,28 +238,6 @@ export function useCreateDefaultData(): WidgetCascaderData {
 }
 
 /**
- * @description 获取不包含运行时选项树的级联选择器属性。
- * @param widgetData 当前级联选择器节点数据。
- * @returns 组件属性的浅拷贝，嵌套 props 同样复制以隔离调用方修改。
- */
-export function useAttributes(widgetData: WidgetCascaderData): Record<string, any> {
-    return {
-        ...widgetData.componentAttributes,
-        props: { ...widgetData.componentAttributes.props },
-        options: widgetData.settingData.options
-    };
-}
-
-/**
- * @description 从设置面板的完整函数声明中提取可执行函数体。
- * @param source 设置面板保存的完整函数源码或空值。
- * @returns 空配置返回 null，否则返回去除首尾声明后的函数体。
- */
-const extractFunctionBody = function (source: string | null): string | null {
-    return source ? source.split("\n").slice(1, -1).join("\n") : null;
-};
-
-/**
  * @description 把级联选择器设置同步到字段身份、表单项、组件属性和脚本函数体。
  * @param widgetData 将被原地更新的级联选择器数据。
  * @param fileName 发生变化的设置字段。
@@ -245,6 +246,10 @@ const extractFunctionBody = function (source: string | null): string | null {
  * @remarks options 与 optionsText 由设置组件在 JSON 完全合法后同步，非法草稿不会进入此函数。
  */
 export function useSettingDataValueChange(widgetData: WidgetCascaderData, fileName: keyof WidgetCascaderData["settingData"], value: any): void {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = widgetData.componentAttributes!;
+    // 工厂和恢复构建器都会生成完整 props，设置阶段可直接维护其嵌套选择行为。
+    const cascaderProps = componentAttributes.props!;
     switch (fileName) {
         case "propName":
         case "defaultValue":
@@ -255,14 +260,17 @@ export function useSettingDataValueChange(widgetData: WidgetCascaderData, fileNa
             widgetData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetData.componentAttributes.disabled = value.includes("disabled");
             widgetData.isShow = value.includes("isShow");
+            componentAttributes.disabled = value.includes("disabled");
             break;
         case "multiple":
         case "checkStrictly":
         case "emitPath":
         case "expandTrigger":
-            widgetData.componentAttributes.props = { ...widgetData.componentAttributes.props, [fileName]: value };
+            cascaderProps[fileName] = value;
+            break;
+        case "options":
+            componentAttributes.options = value;
             break;
         case "placeholder":
         case "clearable":
@@ -272,11 +280,7 @@ export function useSettingDataValueChange(widgetData: WidgetCascaderData, fileNa
         case "maxCollapseTags":
         case "collapseTagsTooltip":
         case "separator":
-            if (value === null) {
-                delete widgetData.componentAttributes[fileName];
-            } else {
-                widgetData.componentAttributes[fileName] = value;
-            }
+            componentAttributes[fileName] = value;
             break;
         case "onValidate":
             widgetData.componentFunctions.validate = extractFunctionBody(value);

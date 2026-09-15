@@ -6,6 +6,8 @@
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetFormData, type WidgetRadioGroupData } from "../types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的单选组稳定 code 与组件库展示元数据。 */
 export const WIDGET_RADIO_GROUP = {
@@ -16,6 +18,17 @@ export const WIDGET_RADIO_GROUP = {
 };
 
 /**
+ * @description 获取单选组运行态属性。
+ * @param widgetRadioGroupData 当前单选组节点数据。
+ * @returns 从选项、形态、样式和 control 完整构建的新属性对象。
+ */
+export function useAttributes(widgetRadioGroupData: WidgetRadioGroupData): NonNullable<WidgetRadioGroupData["componentAttributes"]> {
+    return buildDefinedAttributes(widgetRadioGroupData.settingData, ["options", "type", "textColor", "fill"], {
+        disabled: widgetRadioGroupData.settingData.control.includes("disabled")
+    });
+}
+
+/**
  * @description 创建单选组独立数据。
  * @returns 相互隔离的新单选组节点数据。
  * @remarks 选项分别存在设置态和组件属性中，修改必须经过同步入口，避免预览与设置面板不一致。
@@ -23,6 +36,12 @@ export const WIDGET_RADIO_GROUP = {
 export function useCreateDefaultData(): WidgetRadioGroupData {
     // 根据组件 code 生成当前设计节点的唯一 ID。
     const id = WIDGET_RADIO_GROUP.code.replace(/-/g, "_") + "_" + randomId();
+    // 默认选项由设置态和运行属性共享，后续设置更新会同时替换两处引用。
+    const options = [
+        { value: "1", label: "选项1" },
+        { value: "2", label: "选项2" },
+        { value: "3", label: "选项3", disabled: true }
+    ];
     return {
         id: id,
         code: WIDGET_RADIO_GROUP.code,
@@ -37,13 +56,9 @@ export function useCreateDefaultData(): WidgetRadioGroupData {
             labelPosition: "left"
         },
         componentAttributes: {
-            options: [
-                { value: "1", label: "选项1" },
-                { value: "2", label: "选项2" },
-                { value: "3", label: "选项3", disabled: true }
-            ],
-            disabled: false,
-            type: "radio"
+            options,
+            type: "radio",
+            disabled: false
         },
         componentFunctions: {
             validate: null,
@@ -53,11 +68,7 @@ export function useCreateDefaultData(): WidgetRadioGroupData {
             propName: id,
             label: "单选框",
             labelPosition: "left",
-            options: [
-                { value: "1", label: "选项1" },
-                { value: "2", label: "选项2" },
-                { value: "3", label: "选项3", disabled: true }
-            ],
+            options,
             defaultValue: null,
             control: [],
             type: "radio",
@@ -76,15 +87,6 @@ export function useCreateDefaultData(): WidgetRadioGroupData {
 }
 
 /**
- * @description 获取单选组运行态属性。
- * @param widgetRadioGroupData 当前单选组节点数据。
- * @returns componentAttributes 原始引用；渲染层只消费，不负责修改选项或样式配置。
- */
-export function useAttributes(widgetRadioGroupData: WidgetRadioGroupData): WidgetRadioGroupData["componentAttributes"] {
-    return widgetRadioGroupData.componentAttributes;
-}
-
-/**
  * @description 同步单选组字段、表单项和组件属性，并把脚本模板转换为运行时函数体。
  * @param widgetRadioGroupData 将被原地更新的单选组节点数据。
  * @param fileName 发生变化的设置字段。
@@ -93,6 +95,8 @@ export function useAttributes(widgetRadioGroupData: WidgetRadioGroupData): Widge
  * @remarks 选项值允许字符串、数字或布尔值，默认值类型必须与 option.value 保持一致，否则 Element Plus 无法选中对应项。
  */
 export function useSettingDataValueChange(widgetRadioGroupData: WidgetRadioGroupData, fileName: keyof WidgetRadioGroupData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = widgetRadioGroupData.componentAttributes!;
     switch (fileName) {
         case "defaultValue":
         case "propName":
@@ -103,24 +107,23 @@ export function useSettingDataValueChange(widgetRadioGroupData: WidgetRadioGroup
             widgetRadioGroupData.formAttributes[fileName] = value;
             break;
         case "control":
-            // 可见性属于设计器节点，disabled 属于单选组组件，需要从 control 分别同步。
-            widgetRadioGroupData.componentAttributes.disabled = value.includes("disabled");
             widgetRadioGroupData.isShow = value.includes("isShow");
+            componentAttributes.disabled = value.includes("disabled");
             break;
         case "options":
         case "type":
         case "textColor":
         case "fill":
-            widgetRadioGroupData.componentAttributes[fileName] = value;
+            componentAttributes[fileName] = value;
             break;
         case "required":
         case "requiredMessage":
             break;
         case "onValidate":
-            widgetRadioGroupData.componentFunctions.validate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetRadioGroupData.componentFunctions.validate = extractFunctionBody(value);
             break;
         case "onChange":
-            widgetRadioGroupData.componentFunctions.change = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetRadioGroupData.componentFunctions.change = extractFunctionBody(value);
             break;
     }
     (widgetRadioGroupData.settingData as any)[fileName] = value;

@@ -2,11 +2,13 @@
  * @fileoverview 文本框适配模块，覆盖单行输入和 textarea 两种模式，并负责属性、格式化函数、校验函数及输入事件的转换。
  * @remarks
  * 类型切换时只在 textarea 模式补充 `rows`，切回普通输入后删除该属性，避免无效配置继续透传给 Element Plus。
- * formatter/parser 设计为仅对普通文本模式生效；当前设置同步仍把模板文本写入 componentAttributes，尚未填充 useAttributes 读取的函数容器，调整该能力时需同步两处映射。
+ * formatter/parser 设计为仅对普通文本模式生效；设置态保存完整源码，componentFunctions 保存函数体，属性构建器按需包装。
  * 动态事件通过受控参数执行；字段 id、propName 和表单校验 prop 始终保持同一身份链。
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetTextData, type WidgetFormData } from "../types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { createWidgetComponentFunction, extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的文本框稳定 code 与组件库展示元数据；未知组件创建和属性适配也以文本框作为兼容回退。 */
 export const WIDGET_TEXT = {
@@ -15,6 +17,50 @@ export const WIDGET_TEXT = {
     description: "普通的文本输入框",
     icon: "icon-input"
 };
+
+/**
+ * @description 获取文本框属性，并仅在普通 text 模式下挂载 formatter/parser。
+ * @param widgetTextData 当前文本框节点数据。
+ * @returns 合并静态属性与已配置转换函数的新对象。
+ * @remarks Element Plus 的 textarea 不支持这两个转换器；忽略而非强行透传可避免模式切换后的无效行为。
+ */
+export function useAttributes(widgetTextData: WidgetTextData): NonNullable<WidgetTextData["componentAttributes"]> {
+    const settingData = widgetTextData.settingData;
+    // 收集由脚本配置动态生成的组件属性函数。
+    const functionAttributes: Record<string, (value: string | number) => string> = {};
+    if (settingData.type === "text") {
+        if (widgetTextData.componentFunctions.formatter) {
+            /**
+             * @description 执行输入展示格式化脚本。
+             * @param value 当前输入值。
+             * @returns 格式化后的展示文本。
+             * @throws 配置脚本语法错误或执行失败时原样抛出。
+             */
+            functionAttributes.formatter = function (value: string | number) {
+                return new Function("value", widgetTextData.componentFunctions.formatter as string)(value);
+            };
+        }
+        if (widgetTextData.componentFunctions.parser) {
+            /**
+             * @description 执行展示文本解析脚本。
+             * @param value 当前展示值。
+             * @returns 解析后写入模型的文本。
+             * @throws 配置脚本语法错误或执行失败时原样抛出。
+             */
+            functionAttributes.parser = function (value: string | number) {
+                return new Function("value", widgetTextData.componentFunctions.parser as string)(value);
+            };
+        }
+    }
+    const attributes = buildDefinedAttributes(settingData, ["type", "placeholder", "showWordLimit", "clearable", "maxlength", "minlength"], {
+        disabled: settingData.control.includes("disabled"),
+        readonly: settingData.control.includes("readonly")
+    });
+    if (settingData.type === "textarea" && settingData.rows !== null && settingData.rows !== undefined) {
+        attributes.rows = settingData.rows;
+    }
+    return Object.assign(attributes, functionAttributes);
+}
 
 /**
  * @description 创建文本框独立数据。
@@ -40,12 +86,9 @@ export function useCreateDefaultData(): WidgetTextData {
         componentAttributes: {
             type: "text",
             placeholder: "请输入内容",
-            showWordLimit: false,
-            disabled: false,
             clearable: true,
-            readonly: false,
-            maxlength: undefined,
-            minlength: undefined
+            disabled: false,
+            readonly: false
         },
         componentFunctions: {
             validate: null,
@@ -107,6 +150,8 @@ export function useCreateDefaultData(): WidgetTextData {
  * @remarks 设置态始终保留原值；运行态只保存组件真正需要的属性，防止设置面板结构泄漏到渲染层。
  */
 export function useSettingDataValueChange(data: WidgetTextData, fileName: keyof WidgetTextData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = data.componentAttributes!;
     switch (fileName) {
         case "propName":
         case "defaultValue":
@@ -117,32 +162,51 @@ export function useSettingDataValueChange(data: WidgetTextData, fileName: keyof 
             data.formAttributes[fileName] = value;
             break;
         case "type":
-            data.componentAttributes.type = value;
+            componentAttributes.type = value;
             if (value === "textarea") {
                 // textarea 必须有有效行数；首次切换时补 2 行，但保留用户此前配置的 rows。
                 if (!data.settingData.rows) {
                     data.settingData.rows = 2;
                 }
-                data.componentAttributes.rows = data.settingData.rows;
+                componentAttributes.rows = data.settingData.rows;
+                delete componentAttributes.formatter;
+                delete componentAttributes.parser;
             } else {
-                // 普通 input 不接受 rows，删除旧属性可避免从 textarea 切回时仍透传无效配置。
-                delete data.componentAttributes.rows;
+                delete componentAttributes.rows;
+                const formatter = createWidgetComponentFunction(data.componentFunctions.formatter, ["value"]);
+                const parser = createWidgetComponentFunction(data.componentFunctions.parser, ["value"]);
+                if (formatter) componentAttributes.formatter = formatter;
+                if (parser) componentAttributes.parser = parser;
             }
             break;
         case "control":
-            // control 将三个界面选项拆分到组件禁用、只读属性和设计器节点可见性。
-            data.componentAttributes.disabled = value.includes("disabled");
             data.isShow = value.includes("isShow");
-            data.componentAttributes.readonly = value.includes("readonly");
+            componentAttributes.disabled = value.includes("disabled");
+            componentAttributes.readonly = value.includes("readonly");
             break;
         case "placeholder":
-        case "formatter":
         case "rows":
         case "showWordLimit":
         case "maxlength":
         case "minlength":
+        case "clearable":
+            componentAttributes[fileName] = value;
+            break;
+        case "formatter":
+            data.componentFunctions.formatter = extractFunctionBody(value);
+            if (data.settingData.type === "text" && data.componentFunctions.formatter) {
+                componentAttributes.formatter = createWidgetComponentFunction(data.componentFunctions.formatter, ["value"]);
+            } else {
+                delete componentAttributes.formatter;
+            }
+            break;
         case "parser":
-            data.componentAttributes[fileName] = value;
+            data.componentFunctions.parser = extractFunctionBody(value);
+            if (data.settingData.type === "text" && data.componentFunctions.parser) {
+                componentAttributes.parser = createWidgetComponentFunction(data.componentFunctions.parser, ["value"]);
+            } else {
+                delete componentAttributes.parser;
+            }
             break;
         case "required":
         case "requiredMessage":
@@ -151,58 +215,22 @@ export function useSettingDataValueChange(data: WidgetTextData, fileName: keyof 
             break;
         case "onValidate":
             // 脚本编辑器保存完整声明，运行时只保留函数体，参数由事件/校验适配器受控注入。
-            data.componentFunctions.validate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.validate = extractFunctionBody(value);
             break;
         case "onBlur":
-            data.componentFunctions.blur = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.blur = extractFunctionBody(value);
             break;
         case "onFocus":
-            data.componentFunctions.focus = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.focus = extractFunctionBody(value);
             break;
         case "onInput":
-            data.componentFunctions.input = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.input = extractFunctionBody(value);
             break;
         case "onChange":
-            data.componentFunctions.change = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.change = extractFunctionBody(value);
             break;
     }
     (data.settingData as any)[fileName] = value;
-}
-
-/**
- * @description 获取文本框属性，并仅在普通 text 模式下挂载 formatter/parser。
- * @param widgetTextData 当前文本框节点数据。
- * @returns 合并静态属性与已配置转换函数的新对象。
- * @remarks Element Plus 的 textarea 不支持这两个转换器；忽略而非强行透传可避免模式切换后的无效行为。
- */
-export function useAttributes(widgetTextData: WidgetTextData): WidgetTextData["componentAttributes"] {
-    // 收集由脚本配置动态生成的组件属性函数。
-    const functionAttributes: Record<string, (value: string | number) => string> = {};
-    if (widgetTextData.componentAttributes.type === "text") {
-        if (widgetTextData.componentFunctions.formatter) {
-            /**
-             * @description 执行输入展示格式化脚本。
-             * @param value 当前输入值。
-             * @returns 格式化后的展示文本。
-             * @throws 配置脚本语法错误或执行失败时原样抛出。
-             */
-            functionAttributes.formatter = function (value: string | number) {
-                return new Function("value", widgetTextData.componentFunctions.formatter as string)(value);
-            };
-        }
-        if (widgetTextData.componentFunctions.parser) {
-            /**
-             * @description 执行展示文本解析脚本。
-             * @param value 当前展示值。
-             * @returns 解析后写入模型的文本。
-             * @throws 配置脚本语法错误或执行失败时原样抛出。
-             */
-            functionAttributes.parser = function (value: string | number) {
-                return new Function("value", widgetTextData.componentFunctions.parser as string)(value);
-            };
-        }
-    }
-    return Object.assign({}, widgetTextData.componentAttributes, functionAttributes);
 }
 
 /**

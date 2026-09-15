@@ -2,12 +2,14 @@
  * @fileoverview 下拉选择器适配模块，负责选项与交互属性同步、远程/本地过滤函数包装以及选择事件上下文注入。
  * @remarks
  * 设置态保存完整函数源码，运行态仅保存函数体；渲染时通过 `new Function` 按需生成回调，使组件设计数据能够序列化和导出。
- * 属性适配返回合并后的新对象，不把临时 Function 写回 `componentAttributes`，从而避免污染后续 JSON 导出和复制数据。
+ * 完整属性构建返回新对象；设置面板只原地更新发生变化的属性函数，后续文档领域会在持久化前排除 `componentAttributes`。
  * 选项值与默认值采用严格类型匹配，远程和过滤脚本仅适用于可信配置，脚本异常直接向组件调用链传播。
  * 当前 filterMethod 的运行参数是 value/widgetSelectData，与默认模板展示的 formData/widgetFormData 不一致，扩展过滤上下文前需要先统一这份契约。
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetSelectData, type WidgetFormData } from "@/views/composables/types";
+import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
+import { createWidgetComponentFunction, extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 注册表使用的下拉选择器稳定 code 与组件库展示元数据。 */
 export const WIDGET_SELECT = {
@@ -18,6 +20,48 @@ export const WIDGET_SELECT = {
 };
 
 /**
+ * @description 合并静态属性与远程搜索、本地过滤函数。
+ * @param widgetSelectData 当前选择器节点数据。
+ * @returns 合并静态属性与已配置搜索回调的新对象。
+ * @remarks 返回新对象供首次创建、复制和 JSON 恢复物化；动态函数只应来自可信设计配置。
+ */
+export function useAttributes(widgetSelectData: WidgetSelectData) {
+    // 收集由脚本配置动态生成的组件属性函数。
+    const functionAttributes: Record<string, (query: string) => void> = {};
+    if (widgetSelectData.componentFunctions.remoteMethod) {
+        /**
+         * @description 执行远程选项查询脚本。
+         * @param query 当前搜索关键字。
+         * @returns 无返回值；异步请求及选项写回应由配置脚本处理。
+         * @throws 配置脚本语法错误或执行失败时原样抛出。
+         */
+        functionAttributes.remoteMethod = function (query: string) {
+            new Function("query", "widgetSelectData", widgetSelectData.componentFunctions.remoteMethod as string)(query, widgetSelectData);
+        };
+    }
+    if (widgetSelectData.componentFunctions.filterMethod) {
+        /**
+         * @description 执行本地选项过滤脚本。
+         * @param value 当前过滤关键字。
+         * @returns 无返回值。
+         * @throws 配置脚本语法错误或执行失败时原样抛出。
+         * @remarks 当前运行协议注入 value/widgetSelectData，与默认编辑模板展示的参数并不一致。
+         */
+        functionAttributes.filterMethod = function (value: string) {
+            new Function("value", "widgetSelectData", widgetSelectData.componentFunctions.filterMethod as string)(value, widgetSelectData);
+        };
+    }
+    return Object.assign(
+        buildDefinedAttributes(
+            widgetSelectData.settingData,
+            ["options", "multiple", "multipleLimit", "filterable", "clearable", "placeholder", "collapseTags", "maxCollapseTags", "collapseTagsTooltip", "allowCreate", "remote"],
+            { disabled: widgetSelectData.settingData.control.includes("disabled") }
+        ),
+        functionAttributes
+    );
+}
+
+/**
  * @description 创建下拉选择器默认数据。
  * @returns 相互隔离的新选择器节点数据。
  * @remarks 选项在设置态和运行态分别保存，后续修改必须通过同步函数同时维护。
@@ -25,6 +69,12 @@ export const WIDGET_SELECT = {
 export function useCreateDefaultData(): WidgetSelectData {
     // 根据组件 code 生成当前设计节点的唯一 ID。
     const id = WIDGET_SELECT.code.replace(/-/g, "_") + "_" + randomId();
+    // 默认选项由设置态和运行属性共享，后续设置更新会同时替换两处引用。
+    const options = [
+        { value: "1", label: "选项1" },
+        { value: "2", label: "选项2" },
+        { value: "3", label: "选项3", disabled: true }
+    ];
     return {
         id,
         code: WIDGET_SELECT.code,
@@ -39,12 +89,16 @@ export function useCreateDefaultData(): WidgetSelectData {
             labelPosition: "left"
         },
         componentAttributes: {
+            options,
+            multiple: false,
+            filterable: false,
+            clearable: false,
             placeholder: "请选择",
-            options: [
-                { value: "1", label: "选项1" },
-                { value: "2", label: "选项2" },
-                { value: "3", label: "选项3", disabled: true }
-            ]
+            collapseTags: false,
+            collapseTagsTooltip: false,
+            allowCreate: false,
+            remote: false,
+            disabled: false
         },
         componentFunctions: {
             validate: null,
@@ -61,11 +115,7 @@ export function useCreateDefaultData(): WidgetSelectData {
             propName: id,
             label: WIDGET_SELECT.name,
             labelPosition: "left",
-            options: [
-                { value: "1", label: "选项1" },
-                { value: "2", label: "选项2" },
-                { value: "3", label: "选项3", disabled: true }
-            ],
+            options,
             defaultValue: null,
             control: ["isShow"],
             multiple: false,
@@ -112,41 +162,6 @@ export function useCreateDefaultData(): WidgetSelectData {
 }
 
 /**
- * @description 合并静态属性与远程搜索、本地过滤函数。
- * @param widgetSelectData 当前选择器节点数据。
- * @returns 合并静态属性与已配置搜索回调的新对象。
- * @remarks 返回新对象可避免把临时 Function 写回可序列化的组件数据；动态函数只应来自可信设计配置。
- */
-export function useAttributes(widgetSelectData: WidgetSelectData) {
-    // 收集由脚本配置动态生成的组件属性函数。
-    const functionAttributes: Record<string, (query: string) => void> = {};
-    if (widgetSelectData.componentFunctions.remoteMethod) {
-        /**
-         * @description 执行远程选项查询脚本。
-         * @param query 当前搜索关键字。
-         * @returns 无返回值；异步请求及选项写回应由配置脚本处理。
-         * @throws 配置脚本语法错误或执行失败时原样抛出。
-         */
-        functionAttributes.remoteMethod = function (query: string) {
-            new Function("query", "widgetSelectData", widgetSelectData.componentFunctions.remoteMethod as string)(query, widgetSelectData);
-        };
-    }
-    if (widgetSelectData.componentFunctions.filterMethod) {
-        /**
-         * @description 执行本地选项过滤脚本。
-         * @param value 当前过滤关键字。
-         * @returns 无返回值。
-         * @throws 配置脚本语法错误或执行失败时原样抛出。
-         * @remarks 当前运行协议注入 value/widgetSelectData，与默认编辑模板展示的参数并不一致。
-         */
-        functionAttributes.filterMethod = function (value: string) {
-            new Function("value", "widgetSelectData", widgetSelectData.componentFunctions.filterMethod as string)(value, widgetSelectData);
-        };
-    }
-    return Object.assign({}, widgetSelectData.componentAttributes, functionAttributes);
-}
-
-/**
  * @description 把选择器设置分发到字段身份、表单项、组件属性和脚本函数体。
  * @param widgetSelectData 将被原地更新的选择器节点数据。
  * @param fileName 发生变化的设置字段。
@@ -155,6 +170,8 @@ export function useAttributes(widgetSelectData: WidgetSelectData) {
  * @remarks 所有设置最终仍写回 settingData，保证设置面板显示用户原始输入，而不是运行时转换后的函数体。
  */
 export function useSettingDataValueChange(widgetSelectData: WidgetSelectData, fileName: keyof WidgetSelectData["settingData"], value: any) {
+    // 设置面板只接收工厂创建或恢复完成的 Widget，因此运行属性在此阶段必然存在。
+    const componentAttributes = widgetSelectData.componentAttributes!;
     switch (fileName) {
         case "propName":
         case "defaultValue":
@@ -165,9 +182,8 @@ export function useSettingDataValueChange(widgetSelectData: WidgetSelectData, fi
             widgetSelectData.formAttributes[fileName] = value;
             break;
         case "control":
-            // control 同时控制运行组件是否禁用和设计器节点是否展示。
-            widgetSelectData.componentAttributes.disabled = value.includes("disabled");
             widgetSelectData.isShow = value.includes("isShow");
+            componentAttributes.disabled = value.includes("disabled");
             break;
         case "placeholder":
         case "options":
@@ -180,38 +196,48 @@ export function useSettingDataValueChange(widgetSelectData: WidgetSelectData, fi
         case "collapseTagsTooltip":
         case "allowCreate":
         case "remote":
-            widgetSelectData.componentAttributes[fileName] = value;
+            componentAttributes[fileName] = value;
             break;
         case "required":
         case "requiredMessage":
             break;
         case "remoteMethod":
             // 完整函数声明只用于编辑，运行态保存去掉首尾声明后的函数体。
-            widgetSelectData.componentFunctions.remoteMethod = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSelectData.componentFunctions.remoteMethod = extractFunctionBody(value);
+            if (widgetSelectData.componentFunctions.remoteMethod) {
+                componentAttributes.remoteMethod = createWidgetComponentFunction(widgetSelectData.componentFunctions.remoteMethod, ["query", "widgetSelectData"], false, [widgetSelectData]);
+            } else {
+                delete componentAttributes.remoteMethod;
+            }
             break;
         case "filterMethod":
-            widgetSelectData.componentFunctions.filterMethod = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSelectData.componentFunctions.filterMethod = extractFunctionBody(value);
+            if (widgetSelectData.componentFunctions.filterMethod) {
+                componentAttributes.filterMethod = createWidgetComponentFunction(widgetSelectData.componentFunctions.filterMethod, ["value", "widgetSelectData"], false, [widgetSelectData]);
+            } else {
+                delete componentAttributes.filterMethod;
+            }
             break;
         case "onValidate":
-            widgetSelectData.componentFunctions.validate = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSelectData.componentFunctions.validate = extractFunctionBody(value);
             break;
         case "onChange":
-            widgetSelectData.componentFunctions.change = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSelectData.componentFunctions.change = extractFunctionBody(value);
             break;
         case "onBlur":
-            widgetSelectData.componentFunctions.blur = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSelectData.componentFunctions.blur = extractFunctionBody(value);
             break;
         case "onFocus":
-            widgetSelectData.componentFunctions.focus = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSelectData.componentFunctions.focus = extractFunctionBody(value);
             break;
         case "onClear":
-            widgetSelectData.componentFunctions.clear = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSelectData.componentFunctions.clear = extractFunctionBody(value);
             break;
         case "onRemoveTag":
-            widgetSelectData.componentFunctions.removeTag = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSelectData.componentFunctions.removeTag = extractFunctionBody(value);
             break;
         case "onVisibleChange":
-            widgetSelectData.componentFunctions.visibleChange = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            widgetSelectData.componentFunctions.visibleChange = extractFunctionBody(value);
             break;
         default:
             break;

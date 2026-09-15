@@ -10,6 +10,7 @@ import { reactive, watch } from "vue";
 import { type FormItemRule } from "element-plus";
 import { randomId, setObjectProperty } from "@yujinjin/utils";
 import { type WidgetData, type WidgetFormData, type WidgetNormalData } from "../types";
+import { extractFunctionBody } from "@/views/composables/widget-script-utils";
 
 /** 表单根节点的稳定类型标识；用于生成实例 id，不参与普通组件注册分组。 */
 export const WIDGET_FORM_CODE = "form";
@@ -61,7 +62,7 @@ export function useSettingDataValueChange(data: WidgetFormData, fileName: keyof 
             break;
         case "onInit": {
             // 运行时使用 new Function 注入上下文，只需要函数体；设置态保留完整源码，编辑器才能再次展示函数声明和参数提示。
-            data.componentFunctions.init = value ? value.split("\n").slice(1, -1).join("\n") : null;
+            data.componentFunctions.init = extractFunctionBody(value);
         }
     }
     (data.settingData as any)[fileName] = value;
