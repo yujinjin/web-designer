@@ -67,14 +67,6 @@
                             @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'rows', value)"
                         />
                     </el-form-item>
-                    <el-form-item v-if="settingData.type === 'textarea' || settingData.type === 'text'" label="显示字数统计" prop="showWordLimit">
-                        <el-switch
-                            :model-value="!!settingData.showWordLimit"
-                            :active-value="true"
-                            :inactive-value="false"
-                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'showWordLimit', value)"
-                        />
-                    </el-form-item>
                     <el-form-item label="最大长度" prop="maxlength">
                         <el-input-number
                             :model-value="settingData.maxlength"
@@ -83,6 +75,9 @@
                             :max="100"
                             @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'maxlength', value)"
                         />
+                    </el-form-item>
+                    <el-form-item v-if="settingData.type === 'textarea' || settingData.type === 'text'" label="显示字数统计" prop="showWordLimit">
+                        <el-switch :model-value="!!settingData.showWordLimit" :active-value="true" :inactive-value="false" @update:model-value="value => handleShowWordLimitChange(value === true)" />
                     </el-form-item>
                     <el-form-item label="最小长度" prop="minlength">
                         <el-input-number
@@ -170,6 +165,7 @@
 <script setup lang="ts">
 import { ref, inject, type PropType } from "vue";
 import { Edit } from "@element-plus/icons-vue";
+import { ElMessageBox } from "element-plus";
 import jsCodeEditorDialog from "../js-code-editor-dialog.vue";
 import { type WidgetTextData, type ChangeSelectedWidgetSettingDataFun } from "@/views/composables/types";
 import { usePropNameValidator } from "@/views/composables/validator";
@@ -186,6 +182,36 @@ const props = defineProps({
 const changeSelectedWidgetSettingData = inject<ChangeSelectedWidgetSettingDataFun>("changeSelectedWidgetSettingData");
 
 const propName = ref(props.settingData.propName);
+
+/**
+ * @description 处理字数统计开关，并在缺少最大长度时询问是否使用默认值 100。
+ * @param value 用户切换后的目标状态。
+ * @returns Promise 完成后无返回值；取消或关闭确认框时不修改设置。
+ * @remarks Element Plus 只有在 maxlength 有效时才展示统计，确认后必须先写入 maxlength，再开启 showWordLimit，避免画布出现短暂无效状态。
+ */
+const handleShowWordLimitChange = async function (value: boolean): Promise<void> {
+    if (!changeSelectedWidgetSettingData) return;
+    if (!value) {
+        changeSelectedWidgetSettingData(useSettingDataValueChange, "showWordLimit", false);
+        return;
+    }
+    if (typeof props.settingData.maxlength === "number" && props.settingData.maxlength > 0) {
+        changeSelectedWidgetSettingData(useSettingDataValueChange, "showWordLimit", true);
+        return;
+    }
+    try {
+        await ElMessageBox.confirm("显示字数统计需要设置最大长度，是否将最大长度设置为 100？", "提示", {
+            type: "warning",
+            confirmButtonText: "是",
+            cancelButtonText: "否"
+        });
+        changeSelectedWidgetSettingData(useSettingDataValueChange, "maxlength", 100);
+        changeSelectedWidgetSettingData(useSettingDataValueChange, "showWordLimit", true);
+    } catch {
+        // 取消或关闭属于正常操作，受控开关会继续显示原状态。
+        return;
+    }
+};
 
 const propNameValidator = usePropNameValidator(useSettingDataValueChange);
 
