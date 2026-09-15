@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createWidgetDefaultData, getWidgetComponentAttributes, getWidgetComponentEvents, getWidgetGroup, getWidgetList } from "@/views/composables/widget-registry";
+import { buildWidgetComponentAttributes, createWidgetDefaultData, getWidgetComponentEvents, getWidgetGroup, getWidgetList } from "@/views/composables/widget-registry";
 import { useCreateDefaultData, useEvents, useSettingDataValueChange } from "@/views/composables/widgets/cascader";
 import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/composables/widgets/form";
 
@@ -13,7 +13,8 @@ describe("cascader widget", () => {
         expect(second.settingData.options[0].label).toBe("浙江省");
         expect(first.settingData).not.toHaveProperty("dataSourceType");
         expect(first.settingData).not.toHaveProperty("remote");
-        expect(first.componentAttributes).not.toHaveProperty("options");
+        expect(first.componentAttributes?.options).toBe(first.settingData.options);
+        expect(first.componentAttributes?.options).not.toBe(second.componentAttributes?.options);
     });
 
     it("由注册表创建并归入选择型组件", () => {
@@ -35,8 +36,8 @@ describe("cascader widget", () => {
 
         expect(widgetData.componentAttributes.props).toMatchObject({ multiple: true, emitPath: false, expandTrigger: "hover" });
         expect(widgetData.settingData.options).toBe(localOptions);
-        expect(getWidgetComponentAttributes(widgetData, null).options).toBe(localOptions);
-        expect(widgetData.componentAttributes).not.toHaveProperty("options");
+        expect(buildWidgetComponentAttributes(widgetData).options).toBe(localOptions);
+        expect(widgetData.componentAttributes.options).toBe(localOptions);
     });
 
     it("事件适配器按 Element Plus 事件名注入表单上下文", () => {

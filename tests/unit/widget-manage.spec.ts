@@ -5,6 +5,7 @@ import useWidgetManage from "@/views/composables/widget-manage";
 import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/composables/widgets/form";
 import { useCreateDefaultData as useCreateRowContainerDefaultData } from "@/views/composables/widgets/row-container";
 import { useCreateDefaultData as useCreateTextDefaultData, useSettingDataValueChange as useTextSettingDataValueChange } from "@/views/composables/widgets/text";
+import { useCreateDefaultData as useCreateSwitchDefaultData, useSettingDataValueChange as useSwitchSettingDataValueChange } from "@/views/composables/widgets/switch";
 
 describe("widget manager", () => {
     it("顶层插入会限制索引、更新选中项并保留未知 code 回退", () => {
@@ -97,5 +98,18 @@ describe("widget manager", () => {
 
         expect(widgetFormData.widgets).toEqual([]);
         expect(selectedWidgetId.value).toBeNull();
+    });
+
+    it("复制组件后重新物化被 JSON 深拷贝移除的函数属性", () => {
+        const widgetFormData = useCreateFormDefaultData() as WidgetFormData;
+        const selectedWidgetId = ref<string | null>(null);
+        const widget = useCreateSwitchDefaultData();
+        useSwitchSettingDataValueChange(widget, "beforeChange", "async function beforeChange() {\n return true;\n}");
+        widgetFormData.widgets.push(widget);
+        const { copyWidgetData } = useWidgetManage(widgetFormData, selectedWidgetId);
+
+        copyWidgetData(1, 0);
+
+        expect(widgetFormData.widgets[1].componentAttributes?.beforeChange).toBeTypeOf("function");
     });
 });

@@ -13,7 +13,7 @@ describe("cascader UI contract", () => {
     it("通用渲染器直接分发级联选择器", () => {
         expect(existsSync(cascaderRendererUrl)).toBe(false);
         expect(widgetRendererSource).toMatch(/<el-cascader[\s\S]*?widgetData\.code === widgetList\.WIDGET_CASCADER\.code[\s\S]*?v-model="renderValue"/);
-        expect(widgetRendererSource).toMatch(/<el-cascader[\s\S]*?getWidgetComponentAttributes\(widgetData, renderValue\)/);
+        expect(widgetRendererSource).toMatch(/<el-cascader[\s\S]*?v-bind="renderComponentAttributes"/);
         expect(widgetRendererSource).toMatch(/<el-cascader[\s\S]*?getWidgetComponentEvents\(widgetData, formData, widgetFormData\)/);
         expect(widgetRendererSource).not.toContain("cascaderWidgetRenderer");
         expect(widgetRendererSource).not.toContain("isWidgetCascaderData");

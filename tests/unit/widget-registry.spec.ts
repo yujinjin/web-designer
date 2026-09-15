@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { WIDGET_DEFINITIONS, createWidgetDefaultData, getWidgetComponentAttributes, getWidgetComponentEvents, getWidgetGroup, getWidgetList } from "@/views/composables/widget-registry";
+import { WIDGET_DEFINITIONS, buildWidgetComponentAttributes, createWidgetDefaultData, getWidgetComponentEvents, getWidgetGroup, getWidgetList } from "@/views/composables/widget-registry";
 import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/composables/widgets/form";
 
 const expectedWidgetListKeys = [
@@ -67,7 +67,7 @@ describe("widget registry", () => {
         WIDGET_DEFINITIONS.forEach(item => {
             const widgetData = item.createDefaultData();
             if (item.getAttributes) {
-                expect(getWidgetComponentAttributes(widgetData, widgetData.defaultValue)).toBeTypeOf("object");
+                expect(buildWidgetComponentAttributes(widgetData)).toBeTypeOf("object");
             }
             expect(getWidgetComponentEvents(widgetData, {}, widgetFormData)).toBeTypeOf("object");
         });
