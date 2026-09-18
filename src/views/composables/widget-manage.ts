@@ -3,6 +3,7 @@
  * @remarks 所有树变更均原地作用于 WidgetFormData，保持 Vue 响应式引用；管理范围限定为顶层组件和行容器直接子字段两层结构。
  */
 import { type Ref } from "vue";
+import { type Mutable } from "/#/global.d";
 import { useSettingDataValueChange } from "./widgets/form";
 import { WIDGET_ROW_CONTAINER } from "./widgets/row-container";
 import {
@@ -17,6 +18,19 @@ import {
 import { createWidgetDefaultData } from "./widget-registry";
 import { cloneWidgetData, findWidgetData, getNextSelectedId, isRowContainerWidget } from "./widget-tree";
 import { insertManualSpan, moveRowContainerSpan, ROW_CONTAINER_MAX_WIDGET_COUNT, syncRowContainerSpans } from "./row-container-layout";
+
+/**
+ * @description 用来源对象内容完整替换目标对象，同时保留目标引用。
+ * @param target 设计器当前持有的响应式嵌套对象。
+ * @param source 已校验候选对象中的对应数据。
+ * @returns 无返回值；目标旧键会先清理，再复制来源全部键。
+ * @remarks 原地替换可避免 provide/inject 或设置面板持有的引用失效；候选对象必须在调用前完成所有可失败处理。
+ */
+const replaceObjectContents = <T extends object>(target: T, source: T): void => {
+    const mutableTarget = target as Record<string, any>;
+    Object.keys(mutableTarget).forEach(key => delete mutableTarget[key]);
+    Object.assign(mutableTarget, source);
+};
 
 /**
  * @description 集中维护设计器组件树及选中状态，避免拖拽面板、设置面板分别修改同一份数据。
@@ -218,6 +232,23 @@ export default function useWidgetManage(widgetFormData: WidgetFormData, selected
         selectedWigetId.value = null;
     };
 
+    /**
+     * @description 使用已校验候选数据完整替换当前表单设计。
+     * @param candidate 已完成草稿结构校验和运行属性恢复的独立表单对象。
+     * @returns 无返回值；函数保留根对象及其嵌套响应式容器引用，并清空当前选择。
+     * @remarks 该入口不解析或校验外部数据，调用方必须在提交前完成所有可能失败的工作，防止表单停留在半更新状态。
+     */
+    const replaceWidgetFormData = function (candidate: WidgetFormData): void {
+        const mutableFormData = widgetFormData as Mutable<WidgetFormData>;
+        mutableFormData.id = candidate.id;
+        mutableFormData.code = candidate.code;
+        replaceObjectContents(widgetFormData.formAttributes, candidate.formAttributes);
+        replaceObjectContents(widgetFormData.componentFunctions, candidate.componentFunctions);
+        replaceObjectContents(widgetFormData.settingData, candidate.settingData);
+        widgetFormData.widgets.splice(0, widgetFormData.widgets.length, ...candidate.widgets);
+        selectedWigetId.value = null;
+    };
+
     return {
         changeSelectedWidgetId,
         changeSelectedWidgetSettingData,
@@ -226,6 +257,7 @@ export default function useWidgetManage(widgetFormData: WidgetFormData, selected
         updateWidgetOrder,
         copyWidgetData,
         deleteWidget,
-        clearWidgets
+        clearWidgets,
+        replaceWidgetFormData
     };
 }

@@ -2,6 +2,7 @@
     <div class="center-render-panel">
         <div class="tool-bar">
             <div class="tool-group">
+                <el-button :icon="DocumentChecked" text @click="emit('saveLocalDraft')">保存到本地</el-button>
                 <el-button :icon="View" text>预览</el-button>
                 <el-button :icon="Upload" text>导入JSON</el-button>
                 <el-button :icon="Download" text>导出JSON</el-button>
@@ -98,7 +99,7 @@
 </template>
 <script setup lang="ts">
 import { type Ref, inject, onMounted, shallowRef, onUnmounted, ref } from "vue";
-import { View, Upload, Download, Delete, Rank, Top, Bottom, Hide, CopyDocument, Plus } from "@element-plus/icons-vue";
+import { View, Upload, Download, Delete, Rank, Top, Bottom, Hide, CopyDocument, Plus, DocumentChecked } from "@element-plus/icons-vue";
 import { type RowInstance } from "element-plus";
 import Sortable from "sortablejs";
 import rowContainerRenderer from "./row-container-renderer.vue";
@@ -111,6 +112,7 @@ import { createWidgetLibraryTargetGroup, DESIGNER_ROOT_DRAGGABLE_SELECTOR, DESIG
 
 const emit = defineEmits<{
     clearWidgets: [];
+    saveLocalDraft: [];
 }>();
 
 // 获取注入的表单数据

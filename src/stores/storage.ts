@@ -40,6 +40,23 @@ export default defineStore("storage", {
         setSystemTourVersionValue(value: string) {
             setValue("systemTourVersionValue", value);
         },
+        /**
+         * @description 直接读取设计器单份本地草稿。
+         * @returns localStorage 中 designerFormDraft 业务 key 的当前值；不存在时返回 undefined。
+         * @remarks 草稿不进入 Pinia state，每次调用都读取底层存储，避免形成第二份设计器状态缓存。
+         */
+        getDesignerFormDraft(): unknown {
+            return getValue("designerFormDraft");
+        },
+        /**
+         * @description 直接覆盖设计器单份本地草稿。
+         * @param value 已完成投影的版本化草稿对象。
+         * @returns 无返回值；底层序列化或 localStorage 写入异常会向调用方传播。
+         * @remarks 不更新 Pinia state，页面业务负责成功或失败反馈。
+         */
+        setDesignerFormDraft(value: unknown): void {
+            setValue("designerFormDraft", value);
+        },
         // 刷新页面的时间是否过期
         isExpireForTryReloadTime(): boolean {
             const tryReloadTime = getValue("tryReloadTime", 1);

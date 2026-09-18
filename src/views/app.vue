@@ -9,7 +9,7 @@
                 <left-widget-panel></left-widget-panel>
             </el-splitter-panel>
             <el-splitter-panel v-model:size="centerPanelSize" class="workspace-panel workspace-panel--center" :min="CENTER_PANEL_MIN_WIDTH">
-                <center-render-panel @clear-widgets="clearWidgets"></center-render-panel>
+                <center-render-panel @clear-widgets="clearWidgets" @save-local-draft="handleSaveLocalDraft"></center-render-panel>
             </el-splitter-panel>
             <el-splitter-panel v-model:size="rightPanelSize" class="workspace-panel workspace-panel--right" :min="RIGHT_PANEL_LIMITS.min" :max="RIGHT_PANEL_LIMITS.max">
                 <right-setting-panel></right-setting-panel>
@@ -18,10 +18,13 @@
     </div>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted, provide, readonly, ref, reactive, type Reactive } from "vue";
+import { onMounted, onUnmounted, provide, readonly, ref, reactive } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { type WidgetFormData } from "@/views/composables/types";
 import useWidgetManage from "@/views/composables/widget-manage";
+import { createDesignerFormDraft, restoreDesignerFormDraft } from "@/views/composables/designer-form-draft";
 import { useCreateDefaultData } from "@/views/composables/widgets/form";
+import useStorageStore from "@/stores/storage";
 import {
     calculateWorkspacePanelSizes,
     CENTER_PANEL_MIN_WIDTH,
@@ -50,17 +53,27 @@ const rightPanelSize = ref(initialPanelSizes.right);
 const hasAdjustedPanelSize = ref(false);
 
 // 表单数据，必须是响应式，否则组件管理无法更新
-const widgetFormData: Reactive<WidgetFormData> = reactive(useCreateDefaultData());
+// 使编辑器 Vue TS Plugin 再次展开完整 Reactive<WidgetFormData>，容易产生 TS2589“类型实例化过深”。
+const widgetFormData = reactive(useCreateDefaultData()) as WidgetFormData;
+
+// 本地草稿每次通过 Store action 直接读写，不进入 Pinia state。
+const storageStore = useStorageStore();
 
 // 选中的组件id
 const selectedWigetId = ref<string | null>(null);
 
 // 组件管理
-// @ts-expect-error TS2589: Vue 深层解包 WidgetFormData 时类型实例化过深
-const { changeSelectedWidgetId, changeSelectedWidgetSettingData, changeFormSettingData, insertWidgetDefaultData, updateWidgetOrder, copyWidgetData, deleteWidget, clearWidgets } = useWidgetManage(
-    widgetFormData,
-    selectedWigetId
-);
+const {
+    changeSelectedWidgetId,
+    changeSelectedWidgetSettingData,
+    changeFormSettingData,
+    insertWidgetDefaultData,
+    updateWidgetOrder,
+    copyWidgetData,
+    deleteWidget,
+    clearWidgets,
+    replaceWidgetFormData
+} = useWidgetManage(widgetFormData, selectedWigetId);
 
 // 提供表单数据、改变表单数据、改变选中的组件的设置数据、选中的组件id、改变选中的组件id
 provide("widgetFormData", readonly(widgetFormData));
@@ -72,6 +85,58 @@ provide("copyWidgetData", copyWidgetData);
 provide("deleteWidget", deleteWidget);
 provide("selectedWigetId", readonly(selectedWigetId));
 provide("changeSelectedWidgetId", changeSelectedWidgetId);
+
+/**
+ * @description 将当前表单设计投影为本地草稿并通过 Storage Store 保存。
+ * @returns 无返回值；成功或失败均通过 Element Plus 消息反馈。
+ * @remarks 领域投影先完成 JSON 转换并排除 componentAttributes，Storage Store 只负责不缓存的持久化写入。
+ */
+const handleSaveLocalDraft = function (): void {
+    const draftResult = createDesignerFormDraft(widgetFormData);
+    if (!draftResult.ok) {
+        ElMessage.error(draftResult.message);
+        return;
+    }
+    try {
+        storageStore.setDesignerFormDraft(draftResult.data);
+        ElMessage.success("当前设计已保存到本地");
+    } catch {
+        ElMessage.error("本地保存失败，请检查浏览器存储权限或空间");
+    }
+};
+
+/**
+ * @description 检测上次保存的草稿，并在用户确认后恢复到当前设计器。
+ * @returns Promise 完成后无返回值；无草稿或用户取消时保留默认设计。
+ * @remarks 读取、结构校验和运行属性构建全部发生在状态提交之前，任何失败都不会产生半更新表单，也不会删除原草稿。
+ */
+const restoreLastDesignerFormDraft = async function (): Promise<void> {
+    let storedDraft: unknown;
+    try {
+        storedDraft = storageStore.getDesignerFormDraft();
+    } catch {
+        ElMessage.error("上次保存的设计读取失败，请检查浏览器存储权限");
+        return;
+    }
+    if (storedDraft === undefined || storedDraft === null) return;
+    const draftResult = restoreDesignerFormDraft(storedDraft);
+    if (!draftResult.ok) {
+        ElMessage.error(`上次保存的设计读取失败：${draftResult.message}`);
+        return;
+    }
+    const savedAtText = new Date(draftResult.data.savedAt).toLocaleString("zh-CN", { hour12: false });
+    try {
+        await ElMessageBox.confirm(`检测到上次保存的设计（保存时间：${savedAtText}），是否恢复继续编辑？`, "恢复上次设计", {
+            type: "info",
+            confirmButtonText: "恢复",
+            cancelButtonText: "取消"
+        });
+    } catch {
+        return;
+    }
+    replaceWidgetFormData(draftResult.data.form);
+    ElMessage.success("已恢复上次保存的设计");
+};
 
 /**
  * @description 同步窗口变化后的三栏尺寸。
@@ -107,6 +172,7 @@ const handleWorkspaceResizeEnd = function (_index: number, sizes: number[]): voi
  */
 onMounted(() => {
     window.addEventListener("resize", syncWorkspacePanelSizes);
+    void restoreLastDesignerFormDraft();
 });
 
 /**
