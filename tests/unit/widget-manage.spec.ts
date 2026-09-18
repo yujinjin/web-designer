@@ -112,4 +112,34 @@ describe("widget manager", () => {
 
         expect(widgetFormData.widgets[1].componentAttributes?.beforeChange).toBeTypeOf("function");
     });
+
+    it("完整替换表单时保留响应式引用并清空选中状态", () => {
+        const widgetFormData = useCreateFormDefaultData() as WidgetFormData;
+        const originalWidget = useCreateTextDefaultData();
+        widgetFormData.widgets.push(originalWidget);
+        const selectedWidgetId = ref<string | null>(originalWidget.id);
+        const rootReference = widgetFormData;
+        const widgetsReference = widgetFormData.widgets;
+        const formAttributesReference = widgetFormData.formAttributes;
+        const componentFunctionsReference = widgetFormData.componentFunctions;
+        const settingDataReference = widgetFormData.settingData;
+        const candidate = useCreateFormDefaultData();
+        const candidateWidget = useCreateSwitchDefaultData();
+        candidate.formAttributes.inline = true;
+        candidate.settingData.inline = true;
+        candidate.widgets.push(candidateWidget);
+        const { replaceWidgetFormData } = useWidgetManage(widgetFormData, selectedWidgetId);
+
+        replaceWidgetFormData(candidate);
+
+        expect(widgetFormData).toBe(rootReference);
+        expect(widgetFormData.widgets).toBe(widgetsReference);
+        expect(widgetFormData.formAttributes).toBe(formAttributesReference);
+        expect(widgetFormData.componentFunctions).toBe(componentFunctionsReference);
+        expect(widgetFormData.settingData).toBe(settingDataReference);
+        expect(widgetFormData.formAttributes).toEqual(candidate.formAttributes);
+        expect(widgetFormData.settingData).toEqual(candidate.settingData);
+        expect(widgetFormData.widgets).toEqual([candidateWidget]);
+        expect(selectedWidgetId.value).toBeNull();
+    });
 });
