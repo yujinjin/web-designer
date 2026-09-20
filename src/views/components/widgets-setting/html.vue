@@ -18,16 +18,9 @@
                             <el-checkbox value="isShow">显示</el-checkbox>
                         </el-checkbox-group>
                     </el-form-item>
-                    <div class="html-input">
-                        <div class="label-text">HTML</div>
-                        <el-input
-                            :model-value="settingData.defaultValue"
-                            placeholder="请输入HTML代码"
-                            type="textarea"
-                            :rows="10"
-                            @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'defaultValue', value)"
-                        />
-                    </div>
+                    <el-form-item label="HTML" class="html-form-item" :error="htmlError">
+                        <el-input :model-value="htmlDraft" placeholder="请输入HTML代码" type="textarea" :rows="10" @update:model-value="updateHtmlContent" />
+                    </el-form-item>
                 </el-collapse-item>
             </el-collapse>
         </el-form>
@@ -37,7 +30,7 @@
 import { ref, inject, type PropType } from "vue";
 import { type WidgetHTMLData, type ChangeSelectedWidgetSettingDataFun } from "@/views/composables/types";
 import { usePropNameValidator } from "@/views/composables/validator";
-import { useSettingDataValueChange } from "@/views/composables/widgets/html";
+import { updateHtmlDefaultValue, useSettingDataValueChange } from "@/views/composables/widgets/html";
 
 const props = defineProps({
     settingData: {
@@ -50,12 +43,33 @@ const changeSelectedWidgetSettingData = inject<ChangeSelectedWidgetSettingDataFu
 
 const propName = ref(props.settingData.propName);
 
+// 未通过校验的 HTML 仍保留在输入框中，避免用户修正内容时丢失草稿。
+const htmlDraft = ref(props.settingData.defaultValue ?? "");
+
+// 显示最近一次 HTML 内容检查发现的危险标签或属性。
+const htmlError = ref("");
+
 const propNameValidator = usePropNameValidator(useSettingDataValueChange);
+
+/**
+ * @description 校验 HTML 输入草稿，并只在安全时同步组件设置和画布。
+ * @param value 输入框最新内容。
+ * @returns 无返回值；非法内容仅更新草稿及行内错误。
+ */
+const updateHtmlContent = function (value: string): void {
+    htmlDraft.value = value;
+    const result = updateHtmlDefaultValue(value, safeValue => changeSelectedWidgetSettingData?.(useSettingDataValueChange, "defaultValue", safeValue));
+    htmlError.value = result.ok ? "" : result.message;
+};
 </script>
 <style scoped lang="scss">
 .widgets-setting-html {
-    .html-input {
+    .html-form-item {
         margin-bottom: 20px;
+
+        :deep(.el-form-item__content) {
+            display: block;
+        }
     }
 }
 </style>

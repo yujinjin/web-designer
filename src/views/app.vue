@@ -9,7 +9,7 @@
                 <left-widget-panel></left-widget-panel>
             </el-splitter-panel>
             <el-splitter-panel v-model:size="centerPanelSize" class="workspace-panel workspace-panel--center" :min="CENTER_PANEL_MIN_WIDTH">
-                <center-render-panel @clear-widgets="clearWidgets" @save-local-draft="handleSaveLocalDraft"></center-render-panel>
+                <center-render-panel @clear-widgets="clearWidgets" @save-local-draft="handleSaveLocalDraft" @import-json="handleImportJson" @export-json="handleExportJson"></center-render-panel>
             </el-splitter-panel>
             <el-splitter-panel v-model:size="rightPanelSize" class="workspace-panel workspace-panel--right" :min="RIGHT_PANEL_LIMITS.min" :max="RIGHT_PANEL_LIMITS.max">
                 <right-setting-panel></right-setting-panel>
@@ -22,7 +22,8 @@ import { onMounted, onUnmounted, provide, readonly, ref, reactive } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { type WidgetFormData } from "@/views/composables/types";
 import useWidgetManage from "@/views/composables/widget-manage";
-import { createDesignerFormDraft, restoreDesignerFormDraft } from "@/views/composables/designer-form-draft";
+import { createDesignerFormDocument, parseDesignerFormDocumentText, restoreDesignerFormDocument } from "@/views/composables/designer-form-document";
+import { downloadJsonText, JSON_FILE_MAX_BYTES, readJsonFileText } from "@/views/composables/browser-json-file";
 import { useCreateDefaultData } from "@/views/composables/widgets/form";
 import useStorageStore from "@/stores/storage";
 import {
@@ -87,22 +88,80 @@ provide("selectedWigetId", readonly(selectedWigetId));
 provide("changeSelectedWidgetId", changeSelectedWidgetId);
 
 /**
- * @description 将当前表单设计投影为本地草稿并通过 Storage Store 保存。
+ * @description 将当前表单设计投影为与导出文件同格式的文档并通过 Storage Store 保存。
  * @returns 无返回值；成功或失败均通过 Element Plus 消息反馈。
  * @remarks 领域投影先完成 JSON 转换并排除 componentAttributes，Storage Store 只负责不缓存的持久化写入。
  */
 const handleSaveLocalDraft = function (): void {
-    const draftResult = createDesignerFormDraft(widgetFormData);
-    if (!draftResult.ok) {
-        ElMessage.error(draftResult.message);
+    const documentResult = createDesignerFormDocument(widgetFormData);
+    if (!documentResult.ok) {
+        ElMessage.error(documentResult.message);
         return;
     }
     try {
-        storageStore.setDesignerFormDraft(draftResult.data);
+        storageStore.setDesignerFormDraft(documentResult.data);
         ElMessage.success("当前设计已保存到本地");
     } catch {
         ElMessage.error("本地保存失败，请检查浏览器存储权限或空间");
     }
+};
+
+/**
+ * @description 生成当前设计器 V1 文档并下载格式化 JSON 文件。
+ * @returns 无返回值；序列化、大小或浏览器下载失败时显示错误反馈。
+ */
+const handleExportJson = function (): void {
+    const documentResult = createDesignerFormDocument(widgetFormData);
+    if (!documentResult.ok) {
+        ElMessage.error(documentResult.message);
+        return;
+    }
+    try {
+        const text = JSON.stringify(documentResult.data, null, 4);
+        if (new TextEncoder().encode(text).byteLength > JSON_FILE_MAX_BYTES) {
+            ElMessage.error("导出失败：JSON 文件不能超过 2 MiB");
+            return;
+        }
+        const timestamp = new Date().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
+        downloadJsonText(text, `web-designer-form-${timestamp}.json`);
+        ElMessage.success("JSON 导出成功");
+    } catch {
+        ElMessage.error("JSON 导出失败，请检查浏览器下载权限");
+    }
+};
+
+/**
+ * @description 读取、校验并在用户确认后原子导入表单设计文档。
+ * @param file Center Panel 文件选择器提供的单个 JSON 文件。
+ * @returns Promise 完成后无返回值；任一失败或取消分支均保持当前设计及本地草稿不变。
+ * @remarks 动态脚本只编译不执行；HTML 发现任何被白名单移除的高危内容会直接拒绝，合法动态内容需额外风险确认。
+ */
+const handleImportJson = async function (file: File): Promise<void> {
+    const fileResult = await readJsonFileText(file, JSON_FILE_MAX_BYTES);
+    if (!fileResult.ok) {
+        ElMessage.error(fileResult.message);
+        return;
+    }
+    const documentResult = parseDesignerFormDocumentText(fileResult.data);
+    if (!documentResult.ok) {
+        ElMessage.error(`JSON 导入失败：${documentResult.path ? `${documentResult.path} ` : ""}${documentResult.message}`);
+        return;
+    }
+    const hasDynamicContent = documentResult.data.dynamicContent.hasDynamicScripts || documentResult.data.dynamicContent.hasHtml;
+    const message = hasDynamicContent
+        ? "导入将覆盖当前设计。该文件包含动态脚本或 HTML 内容，后续渲染或交互时可能执行代码、发起请求或展示自定义内容。请确认文件来源可信，是否继续？"
+        : "导入将覆盖当前设计，是否继续？";
+    try {
+        await ElMessageBox.confirm(message, "导入 JSON", {
+            type: hasDynamicContent ? "warning" : "info",
+            confirmButtonText: "确认导入",
+            cancelButtonText: "取消"
+        });
+    } catch {
+        return;
+    }
+    replaceWidgetFormData(documentResult.data.document.form);
+    ElMessage.success("JSON 导入成功");
 };
 
 /**
@@ -119,14 +178,14 @@ const restoreLastDesignerFormDraft = async function (): Promise<void> {
         return;
     }
     if (storedDraft === undefined || storedDraft === null) return;
-    const draftResult = restoreDesignerFormDraft(storedDraft);
-    if (!draftResult.ok) {
-        ElMessage.error(`上次保存的设计读取失败：${draftResult.message}`);
+    const documentResult = restoreDesignerFormDocument(storedDraft);
+    if (!documentResult.ok) {
+        ElMessage.error(`上次保存的设计读取失败：${documentResult.message}`);
         return;
     }
-    const savedAtText = new Date(draftResult.data.savedAt).toLocaleString("zh-CN", { hour12: false });
+    const savedAtText = documentResult.data.savedAt ? `（保存时间：${new Date(documentResult.data.savedAt).toLocaleString("zh-CN", { hour12: false })}）` : "";
     try {
-        await ElMessageBox.confirm(`检测到上次保存的设计（保存时间：${savedAtText}），是否恢复继续编辑？`, "恢复上次设计", {
+        await ElMessageBox.confirm(`检测到上次保存的设计${savedAtText}，是否恢复继续编辑？`, "恢复上次设计", {
             type: "info",
             confirmButtonText: "恢复",
             cancelButtonText: "取消"
@@ -134,7 +193,7 @@ const restoreLastDesignerFormDraft = async function (): Promise<void> {
     } catch {
         return;
     }
-    replaceWidgetFormData(draftResult.data.form);
+    replaceWidgetFormData(documentResult.data.form);
     ElMessage.success("已恢复上次保存的设计");
 };
 

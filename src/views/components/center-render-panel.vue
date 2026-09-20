@@ -4,8 +4,9 @@
             <div class="tool-group">
                 <el-button :icon="DocumentChecked" text @click="emit('saveLocalDraft')">保存到本地</el-button>
                 <el-button :icon="View" text>预览</el-button>
-                <el-button :icon="Upload" text>导入JSON</el-button>
-                <el-button :icon="Download" text>导出JSON</el-button>
+                <el-button :icon="Upload" text @click="handleSelectImportFile">导入JSON</el-button>
+                <el-button :icon="Download" text @click="emit('exportJson')">导出JSON</el-button>
+                <input ref="jsonFileInputRef" class="json-file-input" type="file" accept=".json,application/json" @change="handleImportFileChange" />
             </div>
             <div class="tool-group tool-group--danger">
                 <el-button :icon="Delete" type="danger" text @click="handleClearWidgets">清空</el-button>
@@ -113,7 +114,12 @@ import { createWidgetLibraryTargetGroup, DESIGNER_ROOT_DRAGGABLE_SELECTOR, DESIG
 const emit = defineEmits<{
     clearWidgets: [];
     saveLocalDraft: [];
+    importJson: [file: File];
+    exportJson: [];
 }>();
+
+// 隐藏的 JSON 单文件选择器；每次处理后会重置 value，使同一文件可再次选择。
+const jsonFileInputRef = ref<HTMLInputElement>();
 
 // 获取注入的表单数据
 const widgetFormData = inject<WidgetFormData>("widgetFormData");
@@ -151,6 +157,27 @@ const { activeOperationWidgetId, setHoveredWidgetId, clearHoveredWidgetId, setFo
 
 const handleClearWidgets = function () {
     emit("clearWidgets");
+};
+
+/**
+ * @description 打开 JSON 文件选择器。
+ * @returns 无返回值。
+ */
+const handleSelectImportFile = function (): void {
+    jsonFileInputRef.value?.click();
+};
+
+/**
+ * @description 把用户选择的单个 JSON 文件交给根页面编排导入。
+ * @param event 原生文件输入 change 事件。
+ * @returns 无返回值；没有选择文件时静默返回。
+ * @remarks 发出事件后立即清空 input value，允许用户连续选择同一文件重新导入。
+ */
+const handleImportFileChange = function (event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) emit("importJson", file);
+    input.value = "";
 };
 
 const handleFieldValueChange = function (id: string, value: any) {
@@ -223,6 +250,10 @@ onUnmounted(() => {
             padding-left: 0;
             border-left: 0;
         }
+    }
+
+    .json-file-input {
+        display: none;
     }
 
     .render-panel {

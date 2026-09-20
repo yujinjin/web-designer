@@ -114,6 +114,7 @@ import { computed, type PropType } from "vue";
 import { type WidgetFormData, type WidgetNormalData } from "@/views/composables/types";
 import { useFormItemRules } from "@/views/composables/widgets/form";
 import { getWidgetComponentEvents, getWidgetList } from "@/views/composables/widget-registry";
+import { sanitizeHtmlForRendering } from "@/views/composables/html-safety";
 
 const props = defineProps({
     widgetData: {
@@ -140,10 +141,13 @@ const renderValue = defineModel<any>({
  */
 const renderComponentAttributes = computed<Record<string, any>>(() => props.widgetData.componentAttributes ?? {});
 
-// HTML 组件默认值
+/**
+ * @description HTML Widget 的安全渲染内容。
+ * @remarks 原始设置文本继续用于编辑和文档往返；安全检查失败时返回空内容，绝不回退原文。
+ */
 const htmlDefaultValue = computed(() => {
     const settingData = (props.widgetData.settingData || {}) as Record<string, unknown>;
-    return typeof settingData.defaultValue === "string" ? settingData.defaultValue : "";
+    return typeof settingData.defaultValue === "string" ? sanitizeHtmlForRendering(settingData.defaultValue) : "";
 });
 
 // 表单组件验证规则配置

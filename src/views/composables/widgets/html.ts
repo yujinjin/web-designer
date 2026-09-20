@@ -1,11 +1,11 @@
 /**
  * @fileoverview HTML 展示节点适配模块，保存原始 HTML 片段、字段身份和设计器显示状态，不参与表单校验与事件适配。
  * @remarks
- * 渲染器通过 `v-html` 直接输出 defaultValue，本模块刻意不解析或净化内容，以免编辑器源码被隐式改写。
- * 因此 HTML 必须来自可信设计配置；若接收用户输入，需要在进入设计器前完成清洗，否则存在 XSS 风险。
+ * 原始 HTML 始终保存在设置数据中，渲染器通过 DOMPurify 白名单净化后才交给 `v-html`，避免隐式改写用户编辑源码。
  */
 import { randomId } from "@yujinjin/utils";
 import { type WidgetHTMLData } from "../types";
+import { inspectHtmlSafety, type HtmlSafetyResult } from "@/views/composables/html-safety";
 
 /** 注册表使用的 HTML 展示节点稳定 code 与组件库展示元数据。 */
 export const WIDGET_HTML = {
@@ -18,7 +18,7 @@ export const WIDGET_HTML = {
 /**
  * @description 创建 HTML 展示节点数据。
  * @returns 相互隔离的新 HTML 节点数据。
- * @remarks defaultValue 保存将由渲染器通过 v-html 输出的原始片段。该内容必须来自可信设计配置，本层不做清洗；包含不可信输入时会有 XSS 风险。
+ * @remarks defaultValue 保存原始片段供编辑和文档往返，实际渲染必须经过统一 HTML 安全边界。
  */
 export function useCreateDefaultData(): WidgetHTMLData {
     // 根据组件 code 生成当前设计节点的唯一 ID。
@@ -44,7 +44,7 @@ export function useCreateDefaultData(): WidgetHTMLData {
  * @param fileName 发生变化的设置字段。
  * @param value 设置字段的新值。
  * @returns 无返回值。
- * @remarks 这里只保存原文，不解析或净化 HTML，避免编辑器内容被隐式改写；安全过滤应在配置进入设计器前完成。
+ * @remarks 本函数保留原文，不隐式净化；设置面板与文件导入在提交前校验内容，渲染边界再次净化输出。
  */
 export function useSettingDataValueChange(widgetHTMLData: WidgetHTMLData, fileName: keyof WidgetHTMLData["settingData"], value: any) {
     switch (fileName) {
@@ -60,4 +60,18 @@ export function useSettingDataValueChange(widgetHTMLData: WidgetHTMLData, fileNa
             break;
     }
     widgetHTMLData.settingData[fileName] = value;
+}
+
+/**
+ * @description 只把通过 HTML 安全检查的设置内容提交给设计器。
+ * @param value 设置面板中正在编辑的原始 HTML。
+ * @param commit 已通过校验时使用的组件设置更新入口。
+ * @param inspect 与外部文件导入共用的 HTML 安全检查函数。
+ * @returns 检查结果；失败时调用方保留输入草稿并展示错误，不修改已保存的组件值。
+ * @remarks 校验成功后提交原文而非净化结果，保证再次编辑和导出 JSON 时保留用户输入。
+ */
+export function updateHtmlDefaultValue(value: string, commit: (value: string) => void, inspect: (html: string) => HtmlSafetyResult = inspectHtmlSafety): HtmlSafetyResult {
+    const result = inspect(value);
+    if (result.ok) commit(value);
+    return result;
 }
