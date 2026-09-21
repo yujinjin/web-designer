@@ -9,16 +9,23 @@
                 <left-widget-panel></left-widget-panel>
             </el-splitter-panel>
             <el-splitter-panel v-model:size="centerPanelSize" class="workspace-panel workspace-panel--center" :min="CENTER_PANEL_MIN_WIDTH">
-                <center-render-panel @clear-widgets="clearWidgets" @save-local-draft="handleSaveLocalDraft" @import-json="handleImportJson" @export-json="handleExportJson"></center-render-panel>
+                <center-render-panel
+                    @clear-widgets="clearWidgets"
+                    @save-local-draft="handleSaveLocalDraft"
+                    @preview="handlePreview"
+                    @import-json="handleImportJson"
+                    @export-json="handleExportJson"
+                ></center-render-panel>
             </el-splitter-panel>
             <el-splitter-panel v-model:size="rightPanelSize" class="workspace-panel workspace-panel--right" :min="RIGHT_PANEL_LIMITS.min" :max="RIGHT_PANEL_LIMITS.max">
                 <right-setting-panel></right-setting-panel>
             </el-splitter-panel>
         </el-splitter>
+        <designer-form-preview-dialog v-if="previewWidgetFormData" v-model="isPreviewVisible" :widget-form-data="previewWidgetFormData" @closed="handlePreviewClosed" />
     </div>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted, provide, readonly, ref, reactive } from "vue";
+import { onMounted, onUnmounted, provide, readonly, ref, reactive, shallowRef } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { type WidgetFormData } from "@/views/composables/types";
 import useWidgetManage from "@/views/composables/widget-manage";
@@ -37,6 +44,8 @@ import {
 import leftWidgetPanel from "@/views/components/left-widget-panel.vue";
 import centerRenderPanel from "@/views/components/center-render-panel.vue";
 import rightSettingPanel from "@/views/components/right-setting-panel.vue";
+import designerFormPreviewDialog from "@/views/components/designer-form-preview-dialog.vue";
+import { createDesignerFormPreviewSnapshot } from "@/views/composables/designer-form-preview";
 
 // 首次加载按当前视口计算三栏宽度，窄屏按工作区最小宽度计算并交由外层滚动。
 const initialPanelSizes = calculateWorkspacePanelSizes(typeof window === "undefined" ? WORKSPACE_MIN_WIDTH : window.innerWidth);
@@ -63,6 +72,12 @@ const storageStore = useStorageStore();
 // 选中的组件id
 const selectedWigetId = ref<string | null>(null);
 
+// 控制独立表单预览 Dialog 的显示状态。
+const isPreviewVisible = ref(false);
+
+/** 当前一次打开使用的独立预览快照；关闭完成后释放引用。 */
+const previewWidgetFormData = shallowRef<WidgetFormData | null>(null);
+
 // 组件管理
 const {
     changeSelectedWidgetId,
@@ -86,6 +101,28 @@ provide("copyWidgetData", copyWidgetData);
 provide("deleteWidget", deleteWidget);
 provide("selectedWigetId", readonly(selectedWigetId));
 provide("changeSelectedWidgetId", changeSelectedWidgetId);
+
+/**
+ * @description 从当前设计创建独立快照并打开表单预览。
+ * @returns 无返回值；快照失败时仅展示原因并保持 Dialog 关闭。
+ */
+const handlePreview = function (): void {
+    const previewResult = createDesignerFormPreviewSnapshot(widgetFormData);
+    if (!previewResult.ok) {
+        ElMessage.error(`表单预览失败：${previewResult.message}`);
+        return;
+    }
+    previewWidgetFormData.value = previewResult.data;
+    isPreviewVisible.value = true;
+};
+
+/**
+ * @description 在 Dialog 动画结束后释放本次预览快照。
+ * @returns 无返回值。
+ */
+const handlePreviewClosed = function (): void {
+    previewWidgetFormData.value = null;
+};
 
 /**
  * @description 将当前表单设计投影为与导出文件同格式的文档并通过 Storage Store 保存。

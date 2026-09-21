@@ -3,7 +3,7 @@
         <div class="tool-bar">
             <div class="tool-group">
                 <el-button :icon="DocumentChecked" text @click="emit('saveLocalDraft')">保存到本地</el-button>
-                <el-button :icon="View" text>预览</el-button>
+                <el-button :icon="View" text @click="emit('preview')">预览</el-button>
                 <el-button :icon="Upload" text @click="handleSelectImportFile">导入JSON</el-button>
                 <el-button :icon="Download" text @click="emit('exportJson')">导出JSON</el-button>
                 <input ref="jsonFileInputRef" class="json-file-input" type="file" accept=".json,application/json" @change="handleImportFileChange" />
@@ -114,6 +114,7 @@ import { createWidgetLibraryTargetGroup, DESIGNER_ROOT_DRAGGABLE_SELECTOR, DESIG
 const emit = defineEmits<{
     clearWidgets: [];
     saveLocalDraft: [];
+    preview: [];
     importJson: [file: File];
     exportJson: [];
 }>();

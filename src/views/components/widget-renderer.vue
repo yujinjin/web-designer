@@ -68,7 +68,12 @@
             v-bind="renderComponentAttributes"
             v-on="getWidgetComponentEvents(widgetData, formData, widgetFormData)"
         />
-        <el-time-picker v-else-if="widgetData.code === widgetList.WIDGET_TIME_PICKER.code" v-model="renderValue" v-bind="renderComponentAttributes" />
+        <el-time-picker
+            v-else-if="widgetData.code === widgetList.WIDGET_TIME_PICKER.code"
+            v-model="renderValue"
+            v-bind="renderComponentAttributes"
+            v-on="getWidgetComponentEvents(widgetData, formData, widgetFormData)"
+        />
         <el-time-select
             v-else-if="widgetData.code === widgetList.WIDGET_TIME_SELECT.code"
             v-model="renderValue"

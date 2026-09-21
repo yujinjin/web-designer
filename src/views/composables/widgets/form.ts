@@ -4,7 +4,7 @@
  * 渲染值使用 Vue `reactive` 管理，并只监听字段 id 集合；这样既能在增删组件时同步键集合，又不会因默认值或设置变化覆盖用户当前输入。
  * 行容器在此被扁平化为普通字段列表，提交阶段再按 `propName` 路径组装业务对象，使布局结构与业务数据结构相互独立。
  * 自定义校验通过 `new Function` 注入受控参数执行，仅适用于可信设计配置；非法正则、脚本语法及运行异常会直接向调用方传播。
- * `onInit` 当前仅被转换并存入 componentFunctions，本模块没有执行入口，接入初始化生命周期时需要由外层显式调用。
+ * `onInit` 在本模块中只转换并保存函数体；设计画布不执行，独立预览通过专用初始化运行器显式调用。
  */
 import { reactive, watch } from "vue";
 import { type FormItemRule } from "element-plus";
