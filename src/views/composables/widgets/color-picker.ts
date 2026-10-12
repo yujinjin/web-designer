@@ -116,7 +116,7 @@ export function useSettingDataValueChange(widgetColorPickerData: WidgetColorPick
             widgetColorPickerData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetColorPickerData.isShow = value.includes("isShow");
+            widgetColorPickerData.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             break;
         case "clearable":

@@ -20,10 +20,14 @@ import { useWidgetOperationTarget } from "@/views/composables/widget-operation-t
 import {
     createWidgetLibrarySortableGroup,
     createWidgetLibraryTargetGroup,
+    createDesignerRootTargetGroup,
+    createTemplateLibrarySortableGroup,
     DESIGNER_ROOT_DRAGGABLE_SELECTOR,
     DESIGNER_ROOT_SORTABLE_GROUP,
     getRowContainerSortableGroupName,
     ROW_CONTAINER_DRAGGABLE_SELECTOR,
+    TEMPLATE_LIBRARY_DRAGGABLE_SELECTOR,
+    TEMPLATE_LIBRARY_SORTABLE_GROUP,
     useSortableDragState,
     WIDGET_LIBRARY_DRAGGABLE_SELECTOR,
     WIDGET_LIBRARY_SORTABLE_GROUP
@@ -126,6 +130,7 @@ describe("widget operation target", () => {
         app.provide("selectedWigetId", selectedWidgetId);
         app.provide("changeSelectedWidgetId", () => undefined);
         app.provide("insertWidgetDefaultData", () => undefined);
+        app.provide("insertWidgetTemplate", () => ({ ok: false, message: "测试未使用模板插入" }));
         app.provide("updateWidgetOrder", () => undefined);
         app.provide("copyWidgetData", () => undefined);
         app.provide("deleteWidget", () => undefined);
@@ -142,11 +147,14 @@ describe("widget operation target", () => {
 describe("widget drag drop", () => {
     it("使用独立分组限制组件库、顶层画布和行容器之间的接收关系", () => {
         expect(createWidgetLibrarySortableGroup()).toEqual({ name: WIDGET_LIBRARY_SORTABLE_GROUP, pull: "clone", put: false });
+        expect(createTemplateLibrarySortableGroup()).toEqual({ name: TEMPLATE_LIBRARY_SORTABLE_GROUP, pull: "clone", put: false });
+        expect(createDesignerRootTargetGroup()).toEqual({ name: DESIGNER_ROOT_SORTABLE_GROUP, pull: false, put: [WIDGET_LIBRARY_SORTABLE_GROUP, TEMPLATE_LIBRARY_SORTABLE_GROUP] });
         expect(createWidgetLibraryTargetGroup(DESIGNER_ROOT_SORTABLE_GROUP)).toEqual({ name: DESIGNER_ROOT_SORTABLE_GROUP, pull: false, put: [WIDGET_LIBRARY_SORTABLE_GROUP] });
         expect(getRowContainerSortableGroupName("row-1")).toBe("row-container:row-1");
         expect(WIDGET_LIBRARY_DRAGGABLE_SELECTOR).toBe(".widget-item");
-        expect(DESIGNER_ROOT_DRAGGABLE_SELECTOR).toBe(".drag-item, .widget-item");
+        expect(DESIGNER_ROOT_DRAGGABLE_SELECTOR).toBe(".drag-item, .widget-item, .template-item");
         expect(ROW_CONTAINER_DRAGGABLE_SELECTOR).toBe(".row-container-child, .widget-item");
+        expect(TEMPLATE_LIBRARY_DRAGGABLE_SELECTOR).toBe(".template-item");
     });
 
     it("显式收口拖拽状态以便开始时关闭 Tooltip 并在结束时恢复", () => {
@@ -172,6 +180,7 @@ describe("widget drag drop", () => {
         app.provide("selectedWigetId", selectedWidgetId);
         app.provide("changeSelectedWidgetId", () => undefined);
         app.provide("insertWidgetDefaultData", () => undefined);
+        app.provide("insertWidgetTemplate", () => ({ ok: false, message: "测试未使用模板插入" }));
         app.provide("updateWidgetOrder", () => undefined);
         app.provide("copyWidgetData", () => undefined);
         app.provide("deleteWidget", () => undefined);

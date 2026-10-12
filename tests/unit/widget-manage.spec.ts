@@ -8,6 +8,46 @@ import { useCreateDefaultData as useCreateTextDefaultData, useSettingDataValueCh
 import { useCreateDefaultData as useCreateSwitchDefaultData, useSettingDataValueChange as useSwitchSettingDataValueChange } from "@/views/composables/widgets/switch";
 
 describe("widget manager", () => {
+    it("模板按目标索引原子插入并选中第一个新增组件", () => {
+        const widgetFormData = useCreateFormDefaultData() as WidgetFormData;
+        const selectedWidgetId = ref<string | null>(null);
+        const { insertWidgetTemplate } = useWidgetManage(widgetFormData, selectedWidgetId);
+
+        const result = insertWidgetTemplate("labels-left", 0);
+
+        expect(result.ok).toBe(true);
+        expect(widgetFormData.widgets.length).toBeGreaterThan(1);
+        expect(selectedWidgetId.value).toBe(widgetFormData.widgets[0].id);
+    });
+
+    it("未知模板插入失败时保持组件树和选择不变", () => {
+        const widgetFormData = useCreateFormDefaultData() as WidgetFormData;
+        const selectedWidgetId = ref<string | null>("selected-before");
+        const { insertWidgetTemplate } = useWidgetManage(widgetFormData, selectedWidgetId);
+
+        const result = insertWidgetTemplate("missing-template", 0);
+
+        expect(result.ok).toBe(false);
+        expect(widgetFormData.widgets).toHaveLength(0);
+        expect(selectedWidgetId.value).toBe("selected-before");
+    });
+
+    it("模板在中间索引连续插入且重复实例身份不同", () => {
+        const widgetFormData = useCreateFormDefaultData() as WidgetFormData;
+        widgetFormData.widgets.push(useCreateTextDefaultData(), useCreateTextDefaultData());
+        const selectedWidgetId = ref<string | null>(null);
+        const { insertWidgetTemplate } = useWidgetManage(widgetFormData, selectedWidgetId);
+        const first = insertWidgetTemplate("labels-top", 1);
+        if (!first.ok) throw new Error(first.message);
+        const firstIds = first.data.map(item => item.id);
+        const second = insertWidgetTemplate("labels-top", 999);
+        if (!second.ok) throw new Error(second.message);
+
+        expect(widgetFormData.widgets.slice(1, 1 + first.data.length).map(item => item.id)).toEqual(firstIds);
+        expect(second.data.map(item => item.id)).not.toEqual(firstIds);
+        expect(widgetFormData.widgets.slice(-second.data.length).map(item => item.id)).toEqual(second.data.map(item => item.id));
+    });
+
     it("顶层插入会限制索引、更新选中项并保留未知 code 回退", () => {
         const widgetFormData = useCreateFormDefaultData() as WidgetFormData;
         const selectedWidgetId = ref<string | null>(null);

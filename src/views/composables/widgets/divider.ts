@@ -49,7 +49,7 @@ export function useCreateDefaultData(): WidgetDividerData {
             propName: id,
             defaultValue: null,
             direction: "horizontal",
-            control: ["isShow"],
+            control: [],
             borderStyle: "solid",
             contentPosition: "center"
         }
@@ -76,7 +76,7 @@ export function useSettingDataValueChange(widgetDividerData: WidgetDividerData, 
             widgetDividerData.defaultValue = value;
             break;
         case "control":
-            widgetDividerData.isShow = value.includes("isShow");
+            widgetDividerData.isShow = !value.includes("isHidden");
             break;
         case "direction":
         case "borderStyle":

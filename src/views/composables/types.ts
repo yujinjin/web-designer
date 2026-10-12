@@ -200,8 +200,8 @@ export interface WidgetTextData extends WidgetBaseData {
         rows?: number | null;
         /** 文本框是否展示已输入字符数和最大字符数。 */
         showWordLimit: boolean | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow" | "readonly")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden" | "readonly")[];
         /** 是否允许用户通过清除按钮移除当前值。 */
         clearable: boolean | null;
         /** 文本输入允许的最大字符数。 */
@@ -268,8 +268,8 @@ export interface WidgetInputNumberData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow" | "readonly")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden" | "readonly")[];
         /** 组件允许的最小数值或最少选中数量。 */
         min: number | null;
         /** 组件允许的最大数值、最大选中数量或最大评分。 */
@@ -326,8 +326,8 @@ export interface WidgetRadioGroupData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden")[];
         /** 按钮形态选项或评分文本使用的颜色。 */
         textColor: string | null;
         /** 按钮形态单选组或复选组的激活背景色。 */
@@ -379,8 +379,8 @@ export interface WidgetCheckboxGroupData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden")[];
         /** 组件允许的最小数值或最少选中数量。 */
         min: number | null;
         /** 组件允许的最大数值、最大选中数量或最大评分。 */
@@ -450,8 +450,8 @@ export interface WidgetSelectData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden")[];
         /** 是否允许一次选择多个选项或多个文件。 */
         multiple: boolean | null;
         /** 单选、复选或选择器使用的候选项列表。 */
@@ -598,8 +598,8 @@ export interface WidgetCascaderData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用和显示状态。 */
-        control: ("disabled" | "isShow")[];
+        /** 设置面板组合控制项，用于派生禁用和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden")[];
         /** 最近一次校验合法的本地完整树。 */
         options: CascaderOption[];
         /** 本地树的多行 JSON 编辑文本；非法草稿也保留在设置组件本地状态而非此字段。 */
@@ -692,8 +692,8 @@ export interface WidgetDatePickerData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow" | "readonly")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden" | "readonly")[];
         /** 组件具体展示模式或数据选择类型。 */
         type: "year" | "years" | "month" | "months" | "date" | "dates" | "datetime" | "week" | "datetimerange" | "daterange" | "monthrange" | "yearrange";
         /** 是否允许用户通过清除按钮移除当前值。 */
@@ -784,8 +784,8 @@ export interface WidgetTimePickerData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow" | "readonly")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden" | "readonly")[];
         /** 是否允许用户通过清除按钮移除当前值。 */
         clearable: boolean | null;
         /** 字段没有值时在输入区域展示的占位文案。 */
@@ -860,8 +860,8 @@ export interface WidgetTimeSelectData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden")[];
         /** 是否允许用户通过清除按钮移除当前值。 */
         clearable: boolean | null;
         /** 字段没有值时在输入区域展示的占位文案。 */
@@ -926,8 +926,8 @@ export interface WidgetSwitchData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden")[];
         /** 开关状态文案是否显示在开关轨道内部。 */
         inlinePrompt: boolean | null;
         /** 开关处于激活状态时展示的文案。 */
@@ -972,8 +972,8 @@ export interface WidgetRateData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden")[];
         /** 组件允许的最大数值、最大选中数量或最大评分。 */
         max: number | null;
         /** 评分组件是否允许选择半星。 */
@@ -1034,8 +1034,8 @@ export interface WidgetColorPickerData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden")[];
         /** 是否允许用户通过清除按钮移除当前值。 */
         clearable: boolean | null;
         /** 颜色选择器是否允许编辑透明度通道。 */
@@ -1092,8 +1092,8 @@ export interface WidgetSliderData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden")[];
         /** 组件允许的最小数值或最少选中数量。 */
         min: number | null;
         /** 组件允许的最大数值、最大选中数量或最大评分。 */
@@ -1186,8 +1186,8 @@ export interface WidgetUploadData extends WidgetBaseData {
         required: boolean;
         /** 字段必填校验失败时展示的错误信息。 */
         requiredMessage: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: ("disabled" | "isShow")[];
+        /** 设置面板组合控制项，用于派生禁用、只读和隐藏状态；空数组表示正常显示。 */
+        control: ("disabled" | "isHidden")[];
         /** 上传请求目标地址。 */
         action: string | null;
         /** 上传请求携带的 HTTP 请求头。 */
@@ -1247,8 +1247,8 @@ export interface WidgetHTMLData extends WidgetBaseData {
         propName: string | null;
         /** 字段首次进入渲染数据时使用的默认值；null 通常表示未设置。 */
         defaultValue: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: "isShow"[];
+        /** 设置面板隐藏控制项；空数组表示正常显示。 */
+        control: "isHidden"[];
     };
 }
 
@@ -1262,8 +1262,8 @@ export interface WidgetAlertData extends WidgetBaseData {
     readonly settingData: {
         /** 提交数据使用的业务字段名或嵌套路径；null 表示不进入提交对象。 */
         propName: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: "isShow"[];
+        /** 设置面板隐藏控制项；空数组表示正常显示。 */
+        control: "isHidden"[];
         /** 提示信息展示的主标题。 */
         title: string | null;
         /** 组件用途的简短描述。 */
@@ -1293,8 +1293,8 @@ export interface WidgetDividerData extends WidgetBaseData {
     readonly settingData: {
         /** 提交数据使用的业务字段名或嵌套路径；null 表示不进入提交对象。 */
         propName: string | null;
-        /** 设置面板组合控制项，用于派生禁用、只读和显示状态。 */
-        control: "isShow"[];
+        /** 设置面板隐藏控制项；空数组表示正常显示。 */
+        control: "isHidden"[];
         /** 字段首次进入渲染数据时使用的默认值；null 通常表示未设置。 */
         defaultValue: string | null;
         /** 分隔线的水平或垂直方向。 */

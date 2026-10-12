@@ -108,7 +108,7 @@ export function useCreateDefaultData(): WidgetTextData {
             defaultValue: null,
             rows: null,
             showWordLimit: null,
-            control: ["isShow"],
+            control: [],
             maxlength: null,
             minlength: null,
             clearable: true,
@@ -180,7 +180,7 @@ export function useSettingDataValueChange(data: WidgetTextData, fileName: keyof 
             }
             break;
         case "control":
-            data.isShow = value.includes("isShow");
+            data.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             componentAttributes.readonly = value.includes("readonly");
             break;

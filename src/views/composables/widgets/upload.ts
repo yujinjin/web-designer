@@ -222,7 +222,7 @@ export function useCreateDefaultData(): WidgetUploadData {
             defaultValue: [],
             required: false,
             requiredMessage: null,
-            control: ["isShow"],
+            control: [],
             action: "#",
             accept: null,
             method: "post",
@@ -299,7 +299,7 @@ export function useSettingDataValueChange(widgetUploadData: WidgetUploadData, fi
             widgetUploadData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetUploadData.isShow = value.includes("isShow");
+            widgetUploadData.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             break;
         case "action":

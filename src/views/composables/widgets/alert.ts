@@ -51,7 +51,7 @@ export function useCreateDefaultData(): WidgetAlertData {
         },
         settingData: {
             propName: id,
-            control: ["isShow"],
+            control: [],
             title: "提示信息",
             description: null,
             type: "info",
@@ -80,8 +80,8 @@ export function useSettingDataValueChange(widgetAlertData: WidgetAlertData, file
             widgetAlertData.propName = value;
             break;
         case "control":
-            // 展示组件仅支持 isShow；忽略其他 control 值可避免把输入组件语义错误套用到 Alert。
-            widgetAlertData.isShow = value.includes("isShow");
+            // 展示组件仅处理隐藏选项；不把输入组件的禁用或只读语义套用到 Alert。
+            widgetAlertData.isShow = !value.includes("isHidden");
             break;
         case "title":
         case "description":

@@ -121,7 +121,7 @@ export function useSettingDataValueChange(data: WidgetInputNumberData, fileName:
             data.formAttributes[fileName] = value;
             break;
         case "control":
-            data.isShow = value.includes("isShow");
+            data.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             componentAttributes.readonly = value.includes("readonly");
             break;

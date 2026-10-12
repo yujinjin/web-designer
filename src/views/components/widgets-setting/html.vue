@@ -15,7 +15,7 @@
                     </el-form-item>
                     <el-form-item label="控制属性" prop="control">
                         <el-checkbox-group :model-value="settingData.control" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'control', value)">
-                            <el-checkbox value="isShow">显示</el-checkbox>
+                            <el-checkbox value="isHidden">隐藏</el-checkbox>
                         </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="HTML" class="html-form-item" :error="htmlError">

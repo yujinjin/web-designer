@@ -36,6 +36,12 @@
                             <el-radio-button value="top">上</el-radio-button>
                         </el-radio-group>
                     </el-form-item>
+                    <el-form-item label="控制属性" prop="control">
+                        <el-checkbox-group :model-value="settingData.control" @update:model-value="value => changeSelectedWidgetSettingData?.(useSettingDataValueChange, 'control', value)">
+                            <el-checkbox value="disabled">禁用</el-checkbox>
+                            <el-checkbox value="isHidden">隐藏</el-checkbox>
+                        </el-checkbox-group>
+                    </el-form-item>
                     <div class="option-config-row">
                         <div class="label-text">选项配置</div>
                         <option-config

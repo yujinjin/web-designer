@@ -164,7 +164,7 @@ export function useSettingDataValueChange(widgetSliderData: WidgetSliderData, fi
             widgetSliderData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetSliderData.isShow = value.includes("isShow");
+            widgetSliderData.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             break;
         case "min":

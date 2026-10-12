@@ -3,8 +3,78 @@ import { useCreateDefaultData as useCreateDatePickerDefaultData, useSettingDataV
 import { useCreateDefaultData as useCreateSwitchDefaultData, useSettingDataValueChange as changeSwitchSetting } from "@/views/composables/widgets/switch";
 import { useCreateDefaultData as useCreateTimePickerDefaultData, useSettingDataValueChange as changeTimePickerSetting } from "@/views/composables/widgets/time-picker";
 import { useCreateDefaultData as useCreateTimeSelectDefaultData, useSettingDataValueChange as changeTimeSelectSetting } from "@/views/composables/widgets/time-select";
+import { WIDGET_DEFINITIONS } from "@/views/composables/widget-registry";
+import { useCreateDefaultData as createRate, useSettingDataValueChange as changeRate } from "@/views/composables/widgets/rate";
 
 describe("widget default value settings", () => {
+    it.each([
+        "text",
+        "input-number",
+        "radio-group",
+        "checkbox-group",
+        "select",
+        "cascader",
+        "date-picker",
+        "time-picker",
+        "time-select",
+        "switch",
+        "rate",
+        "color-picker",
+        "slider",
+        "upload",
+        "html",
+        "alert",
+        "divider"
+    ])("%s 的隐藏控制可往返，空control不隐藏", async code => {
+        const adapter = await import(`../../src/views/composables/widgets/${code}.ts`);
+        const widget = adapter.useCreateDefaultData();
+        adapter.useSettingDataValueChange(widget, "control", ["isHidden"]);
+        expect(widget.isShow).toBe(false);
+        expect(widget.settingData.control).toEqual(["isHidden"]);
+        adapter.useSettingDataValueChange(widget, "control", []);
+        expect(widget.isShow).toBe(true);
+        expect(widget.settingData.control).toEqual([]);
+        if (widget.componentAttributes && "disabled" in widget.componentAttributes) {
+            adapter.useSettingDataValueChange(widget, "control", ["disabled"]);
+            expect(widget.isShow).toBe(true);
+            expect(widget.componentAttributes.disabled).toBe(true);
+            adapter.useSettingDataValueChange(widget, "control", ["disabled", "isHidden"]);
+            expect(widget.isShow).toBe(false);
+            expect(widget.componentAttributes.disabled).toBe(true);
+        }
+        if (widget.componentAttributes && "readonly" in widget.componentAttributes) {
+            adapter.useSettingDataValueChange(widget, "control", ["readonly", "isHidden"]);
+            expect(widget.isShow).toBe(false);
+            expect(widget.componentAttributes.readonly).toBe(true);
+            adapter.useSettingDataValueChange(widget, "control", ["readonly"]);
+            expect(widget.isShow).toBe(true);
+            expect(widget.componentAttributes.readonly).toBe(true);
+            adapter.useSettingDataValueChange(widget, "control", []);
+            expect(widget.componentAttributes.readonly).toBe(false);
+        }
+    });
+    it("所有支持控制属性的组件默认control为空且正常显示", () => {
+        for (const definition of WIDGET_DEFINITIONS) {
+            const widget = definition.createDefaultData();
+            const control = widget.settingData && "control" in widget.settingData ? widget.settingData.control : undefined;
+            if (Array.isArray(control)) {
+                expect(control, definition.meta.code).toEqual([]);
+                expect(widget.isShow, definition.meta.code).toBe(true);
+            }
+        }
+    });
+
+    it("评分只勾选隐藏才隐藏，禁用状态与隐藏独立", () => {
+        const widget = createRate();
+        changeRate(widget, "control", [...widget.settingData.control, "disabled"]);
+        expect(widget.isShow).toBe(true);
+        expect(widget.componentAttributes!.disabled).toBe(true);
+        changeRate(widget, "control", ["isHidden"]);
+        expect(widget.isShow).toBe(false);
+        expect(widget.componentAttributes!.disabled).toBe(false);
+        changeRate(widget, "control", []);
+        expect(widget.isShow).toBe(true);
+    });
     it("时间选择默认值同步写入根级和设置态数据", () => {
         const widgetData = useCreateTimeSelectDefaultData();
 

@@ -28,7 +28,7 @@
                     </el-form-item>
                     <el-form-item label="组件状态">
                         <el-checkbox-group :model-value="settingData.control" @update:model-value="value => updateSetting('control', value)">
-                            <el-checkbox value="isShow">显示</el-checkbox>
+                            <el-checkbox value="isHidden">隐藏</el-checkbox>
                             <el-checkbox value="disabled">禁用</el-checkbox>
                         </el-checkbox-group>
                     </el-form-item>

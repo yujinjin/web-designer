@@ -7,14 +7,20 @@ import { readonly, ref, type Ref } from "vue";
 /** 组件库的 Sortable 来源组名称。 */
 export const WIDGET_LIBRARY_SORTABLE_GROUP = "widget-library";
 
+/** 模板库的 Sortable 来源组名称。 */
+export const TEMPLATE_LIBRARY_SORTABLE_GROUP = "template-library";
+
 /** 顶层画布的 Sortable 组名称。 */
 export const DESIGNER_ROOT_SORTABLE_GROUP = "designer-root";
 
 /** 组件库中允许作为拖拽源的直接子元素。 */
 export const WIDGET_LIBRARY_DRAGGABLE_SELECTOR = ".widget-item";
 
+/** 模板库中允许作为拖拽源的直接子元素。 */
+export const TEMPLATE_LIBRARY_DRAGGABLE_SELECTOR = ".template-item";
+
 /** 顶层画布中的真实组件和组件库临时克隆。 */
-export const DESIGNER_ROOT_DRAGGABLE_SELECTOR = ".drag-item, .widget-item";
+export const DESIGNER_ROOT_DRAGGABLE_SELECTOR = ".drag-item, .widget-item, .template-item";
 
 /** 行容器中的真实子组件和组件库临时克隆。 */
 export const ROW_CONTAINER_DRAGGABLE_SELECTOR = ".row-container-child, .widget-item";
@@ -38,6 +44,22 @@ export interface WidgetSortableGroup {
  */
 export const createWidgetLibrarySortableGroup = function (): WidgetSortableGroup {
     return { name: WIDGET_LIBRARY_SORTABLE_GROUP, pull: "clone", put: false };
+};
+
+/**
+ * @description 生成模板库只克隆、不接收的来源组配置。
+ * @returns 可直接传给 SortableJS `group` 的配置。
+ */
+export const createTemplateLibrarySortableGroup = function (): WidgetSortableGroup {
+    return { name: TEMPLATE_LIBRARY_SORTABLE_GROUP, pull: "clone", put: false };
+};
+
+/**
+ * @description 生成同时接收普通组件和模板区块的顶层画布配置。
+ * @returns 顶层设计画布使用的 SortableJS 分组配置。
+ */
+export const createDesignerRootTargetGroup = function (): WidgetSortableGroup {
+    return { name: DESIGNER_ROOT_SORTABLE_GROUP, pull: false, put: [WIDGET_LIBRARY_SORTABLE_GROUP, TEMPLATE_LIBRARY_SORTABLE_GROUP] };
 };
 
 /**

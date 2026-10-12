@@ -113,7 +113,7 @@ export function useSettingDataValueChange(widgetCheckboxGroupData: WidgetCheckbo
             widgetCheckboxGroupData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetCheckboxGroupData.isShow = value.includes("isShow");
+            widgetCheckboxGroupData.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             break;
         case "options":

@@ -126,7 +126,7 @@ export function useSettingDataValueChange(data: WidgetTimeSelectData, fileName: 
             data.formAttributes[fileName] = value;
             break;
         case "control":
-            data.isShow = value.includes("isShow");
+            data.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             break;
         case "clearable":

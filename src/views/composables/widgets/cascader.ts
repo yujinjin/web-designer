@@ -194,7 +194,7 @@ export function useCreateDefaultData(): WidgetCascaderData {
             defaultValue: null,
             required: false,
             requiredMessage: null,
-            control: ["isShow"],
+            control: [],
             options,
             optionsText: JSON.stringify(options, null, 4),
             placeholder: "请选择",
@@ -260,7 +260,7 @@ export function useSettingDataValueChange(widgetData: WidgetCascaderData, fileNa
             widgetData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetData.isShow = value.includes("isShow");
+            widgetData.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             break;
         case "multiple":

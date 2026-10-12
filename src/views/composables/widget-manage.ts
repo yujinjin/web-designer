@@ -18,6 +18,7 @@ import {
 import { createWidgetDefaultData } from "./widget-registry";
 import { cloneWidgetData, findWidgetData, getNextSelectedId, isRowContainerWidget } from "./widget-tree";
 import { insertManualSpan, moveRowContainerSpan, ROW_CONTAINER_MAX_WIDGET_COUNT, syncRowContainerSpans } from "./row-container-layout";
+import { createFormTemplateWidgets } from "./form-template-registry";
 
 /**
  * @description 用来源对象内容完整替换目标对象，同时保留目标引用。
@@ -130,6 +131,23 @@ export default function useWidgetManage(widgetFormData: WidgetFormData, selected
         const insertIndex = Math.max(0, Math.min(newIndex, topWidgets.length));
         topWidgets.splice(insertIndex, 0, widgetData);
         changeSelectedWidgetId(widgetData.id);
+    };
+
+    /**
+     * @description 在顶层目标索引原子插入一个内置表单区块模板。
+     * @param templateId 模板注册表中的稳定 ID。
+     * @param newIndex 模板第一项的目标顶层索引，超出范围时收敛到数组边界。
+     * @returns 模板创建结果；失败时组件树和选择状态均不改变。
+     * @remarks 工厂和结构校验全部发生在 splice 前，避免复杂模板只插入一部分。
+     */
+    const insertWidgetTemplate = function (templateId: string, newIndex: number) {
+        const templateResult = createFormTemplateWidgets(templateId);
+        if (!templateResult.ok) return templateResult;
+        const topWidgets = getTopWidgets();
+        const insertIndex = Math.max(0, Math.min(newIndex, topWidgets.length));
+        topWidgets.splice(insertIndex, 0, ...templateResult.data);
+        changeSelectedWidgetId(templateResult.data[0].id);
+        return templateResult;
     };
 
     /**
@@ -254,6 +272,7 @@ export default function useWidgetManage(widgetFormData: WidgetFormData, selected
         changeSelectedWidgetSettingData,
         changeFormSettingData,
         insertWidgetDefaultData,
+        insertWidgetTemplate,
         updateWidgetOrder,
         copyWidgetData,
         deleteWidget,

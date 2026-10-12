@@ -84,6 +84,7 @@ const {
     changeSelectedWidgetSettingData,
     changeFormSettingData,
     insertWidgetDefaultData,
+    insertWidgetTemplate,
     updateWidgetOrder,
     copyWidgetData,
     deleteWidget,
@@ -96,6 +97,7 @@ provide("widgetFormData", readonly(widgetFormData));
 provide("changeFormSettingData", changeFormSettingData);
 provide("changeSelectedWidgetSettingData", changeSelectedWidgetSettingData);
 provide("insertWidgetDefaultData", insertWidgetDefaultData);
+provide("insertWidgetTemplate", insertWidgetTemplate);
 provide("updateWidgetOrder", updateWidgetOrder);
 provide("copyWidgetData", copyWidgetData);
 provide("deleteWidget", deleteWidget);

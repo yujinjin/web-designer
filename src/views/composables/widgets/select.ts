@@ -117,7 +117,7 @@ export function useCreateDefaultData(): WidgetSelectData {
             labelPosition: "left",
             options,
             defaultValue: null,
-            control: ["isShow"],
+            control: [],
             multiple: false,
             multipleLimit: null,
             filterable: false,
@@ -182,7 +182,7 @@ export function useSettingDataValueChange(widgetSelectData: WidgetSelectData, fi
             widgetSelectData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetSelectData.isShow = value.includes("isShow");
+            widgetSelectData.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             break;
         case "placeholder":

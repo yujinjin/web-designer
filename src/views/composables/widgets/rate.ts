@@ -110,7 +110,7 @@ export function useSettingDataValueChange(widgetRateData: WidgetRateData, fileNa
             widgetRateData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetRateData.isShow = value.includes("isShow");
+            widgetRateData.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             break;
         case "allowHalf":

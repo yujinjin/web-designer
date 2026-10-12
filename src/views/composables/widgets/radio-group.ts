@@ -107,7 +107,7 @@ export function useSettingDataValueChange(widgetRadioGroupData: WidgetRadioGroup
             widgetRadioGroupData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetRadioGroupData.isShow = value.includes("isShow");
+            widgetRadioGroupData.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             break;
         case "options":

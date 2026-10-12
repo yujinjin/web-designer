@@ -91,7 +91,7 @@
                     <div v-if="widgetFormData!.widgets.length === 0" class="empty-tip">
                         <el-icon class="empty-tip__icon"><Plus /></el-icon>
                         <span class="empty-tip__title">暂无表单组件</span>
-                        <span class="empty-tip__description">从左侧组件库拖入组件</span>
+                        <span class="empty-tip__description">从左侧组件库或模板库拖入内容</span>
                     </div>
                 </div>
             </el-form>
@@ -101,7 +101,7 @@
 <script setup lang="ts">
 import { type Ref, inject, onMounted, shallowRef, onUnmounted, ref } from "vue";
 import { View, Upload, Download, Delete, Rank, Top, Bottom, Hide, CopyDocument, Plus, DocumentChecked } from "@element-plus/icons-vue";
-import { type RowInstance } from "element-plus";
+import { ElMessage, type RowInstance } from "element-plus";
 import Sortable from "sortablejs";
 import rowContainerRenderer from "./row-container-renderer.vue";
 import widgetRenderer from "./widget-renderer.vue";
@@ -109,7 +109,8 @@ import { type WidgetFormData, type WidgetNormalData, type WidgetRowContainerData
 import { useFormRenderData } from "@/views/composables/widgets/form";
 import { getWidgetList } from "@/views/composables/widget-registry";
 import { useWidgetOperationTarget } from "@/views/composables/widget-operation-target";
-import { createWidgetLibraryTargetGroup, DESIGNER_ROOT_DRAGGABLE_SELECTOR, DESIGNER_ROOT_SORTABLE_GROUP } from "@/views/composables/widget-drag-drop";
+import { createDesignerRootTargetGroup, DESIGNER_ROOT_DRAGGABLE_SELECTOR } from "@/views/composables/widget-drag-drop";
+import { type FormTemplateResult } from "@/views/composables/form-template-types";
 
 const emit = defineEmits<{
     clearWidgets: [];
@@ -133,6 +134,9 @@ const changeSelectedWidgetId = inject<(id: string | null) => void>("changeSelect
 
 // 获取注入的插入组件的函数
 const insertWidgetDefaultData = inject<(code: string, newIndex: number, parentWidgetId?: string) => void>("insertWidgetDefaultData");
+
+// 获取注入的模板区块原子插入函数。
+const insertWidgetTemplate = inject<(templateId: string, newIndex: number) => FormTemplateResult>("insertWidgetTemplate");
 
 // 获取注入的更新组件的顺序的函数
 const updateWidgetOrder = inject<(oldIndex: number, newIndex: number, parentWidgetId?: string) => void>("updateWidgetOrder");
@@ -190,18 +194,25 @@ onMounted(() => {
     if (dropContainerRef.value) {
         sortableInstance.value = new Sortable(dropContainerRef.value.$el, {
             animation: 150,
-            group: createWidgetLibraryTargetGroup(DESIGNER_ROOT_SORTABLE_GROUP),
+            group: createDesignerRootTargetGroup(),
             sort: true,
             draggable: DESIGNER_ROOT_DRAGGABLE_SELECTOR,
             dragoverBubble: false,
             ghostClass: "designer-drop-indicator",
             handle: ".widget-drag-handle",
             onAdd: (evt: Sortable.SortableEvent) => {
+                const templateId = evt.item?.getAttribute("data-template-id");
                 const widgetType = evt.item?.getAttribute("data-widget-type");
                 evt.item?.remove();
-                if (evt.newIndex === undefined || !widgetType) {
+                if (evt.newIndex === undefined) {
                     return;
                 }
+                if (templateId) {
+                    const result = insertWidgetTemplate?.(templateId, evt.newIndex);
+                    if (result && !result.ok) ElMessage.error(result.message);
+                    return;
+                }
+                if (!widgetType) return;
                 insertWidgetDefaultData?.(widgetType, evt.newIndex);
             },
             onEnd: (evt: Sortable.SortableEvent) => {
@@ -504,6 +515,7 @@ onUnmounted(() => {
     }
 
     .drop-container > .widget-item.designer-drop-indicator,
+    .drop-container > .template-item.designer-drop-indicator,
     .row-container-grid > .widget-item.designer-drop-indicator {
         width: 100%;
         max-width: 100%;

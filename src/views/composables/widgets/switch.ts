@@ -120,7 +120,7 @@ export function useSettingDataValueChange(widgetSwitchData: WidgetSwitchData, fi
             widgetSwitchData.formAttributes[fileName] = value;
             break;
         case "control":
-            widgetSwitchData.isShow = value.includes("isShow");
+            widgetSwitchData.isShow = !value.includes("isHidden");
             componentAttributes.disabled = value.includes("disabled");
             break;
         case "activeText":

@@ -33,7 +33,7 @@ export function useCreateDefaultData(): WidgetHTMLData {
         settingData: {
             propName: id,
             defaultValue: "<b>html text</b>",
-            control: ["isShow"]
+            control: []
         }
     };
 }
@@ -56,7 +56,7 @@ export function useSettingDataValueChange(widgetHTMLData: WidgetHTMLData, fileNa
             widgetHTMLData.propName = value;
             break;
         case "control":
-            widgetHTMLData.isShow = value.includes("isShow");
+            widgetHTMLData.isShow = !value.includes("isHidden");
             break;
     }
     widgetHTMLData.settingData[fileName] = value;

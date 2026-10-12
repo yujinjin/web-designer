@@ -1,7 +1,7 @@
 <template>
     <div class="left-widget-panel">
-        <el-tabs model-value="first">
-            <el-tab-pane label="组件库" name="first">
+        <el-tabs v-model="activeTab">
+            <el-tab-pane label="组件库" name="widgets">
                 <div class="tab-content">
                     <el-collapse :model-value="widgetGroup.map((item, index) => index)">
                         <el-collapse-item v-for="(groupItem, index) in widgetGroup" :key="index" :title="groupItem.groupName" :name="index">
@@ -19,49 +19,116 @@
                     </el-collapse>
                 </div>
             </el-tab-pane>
-            <el-tab-pane label="模板库" name="second">
-                <div class="tab-content">模板</div>
+            <el-tab-pane label="模板库" name="templates">
+                <div class="tab-content template-tab-content">
+                    <el-collapse :model-value="templateGroups.map(group => group.code)">
+                        <el-collapse-item v-for="group in templateGroups" :key="group.code" :title="group.name" :name="group.code">
+                            <div :ref="el => setTemplateGroupRef(group.code, el as HTMLDivElement)" class="template-group">
+                                <article v-for="template in group.children" :key="template.id" class="template-item" :data-template-id="template.id" :aria-label="template.name">
+                                    <div class="template-image-frame" :style="{ aspectRatio: `720 / ${template.previewHeight}` }">
+                                        <img
+                                            v-if="!failedTemplateImages[template.id]"
+                                            class="template-image"
+                                            :src="template.previewImage"
+                                            :alt="template.previewAlt"
+                                            :width="720"
+                                            :height="template.previewHeight"
+                                            loading="lazy"
+                                            draggable="false"
+                                            @error="failedTemplateImages[template.id] = true"
+                                        />
+                                        <div v-else class="template-image-fallback">{{ template.name }}</div>
+                                    </div>
+                                    <div class="template-card-body">
+                                        <strong class="template-name">{{ template.name }}</strong>
+                                        <span class="template-description">{{ template.description }}</span>
+                                    </div>
+                                </article>
+                            </div>
+                        </el-collapse-item>
+                    </el-collapse>
+                </div>
             </el-tab-pane>
         </el-tabs>
     </div>
 </template>
 <script setup lang="ts">
-import { onMounted, shallowRef, onUnmounted } from "vue";
+import { onMounted, reactive, ref, shallowRef, onUnmounted } from "vue";
 import Sortable from "sortablejs";
 import { getWidgetGroup } from "@/views/composables/widget-registry";
-import { createWidgetLibrarySortableGroup, useSortableDragState, WIDGET_LIBRARY_DRAGGABLE_SELECTOR } from "@/views/composables/widget-drag-drop";
+import {
+    createTemplateLibrarySortableGroup,
+    createWidgetLibrarySortableGroup,
+    TEMPLATE_LIBRARY_DRAGGABLE_SELECTOR,
+    useSortableDragState,
+    WIDGET_LIBRARY_DRAGGABLE_SELECTOR
+} from "@/views/composables/widget-drag-drop";
+import { getFormTemplateGroups } from "@/views/composables/form-template-registry";
+
+// 当前左栏页签，使用可写状态保证组件库和模板库可以反复切换。
+const activeTab = ref("widgets");
 
 const widgetGroupRefs = shallowRef<(HTMLDivElement | null)[]>([]);
+
+/** 按模板分类 code 保存拖拽容器元素。 */
+const templateGroupRefs = shallowRef<Record<string, HTMLDivElement | null>>({});
 
 const sortableInstances = shallowRef<Sortable[]>([]);
 
 const widgetGroup = getWidgetGroup();
 
+const templateGroups = getFormTemplateGroups();
+
+// 图片加载失败状态只控制当前卡片占位，不修改模板注册数据。
+const failedTemplateImages = reactive<Record<string, boolean>>({});
+
 // 原生拖拽可能不触发源按钮 mouseleave，拖拽期间禁用 Tooltip 可主动关闭已显示弹层。
 const { isDragging, startDragging, stopDragging } = useSortableDragState();
+
+/**
+ * @description 保存模板分类对应的 DOM 引用，供挂载后初始化 Sortable。
+ * @param code 模板分类稳定 code。
+ * @param element 当前分类的卡片容器。
+ * @returns 无返回值。
+ */
+const setTemplateGroupRef = function (code: string, element: HTMLDivElement | null): void {
+    templateGroupRefs.value[code] = element;
+};
+
+/**
+ * @description 创建共享拖拽生命周期回调的组件库或模板库 Sortable 实例。
+ * @param element 拖拽源容器。
+ * @param group Sortable 来源组配置。
+ * @param draggable 当前来源允许克隆的选择器。
+ * @returns 已初始化的 Sortable 实例。
+ */
+const createLibrarySortable = function (element: HTMLDivElement, group: ReturnType<typeof createWidgetLibrarySortableGroup>, draggable: string): Sortable {
+    return new Sortable(element, {
+        animation: 150,
+        group,
+        sort: false,
+        draggable,
+        ghostClass: "sortable-ghost",
+        onStart: function () {
+            startDragging();
+        },
+        onEnd: function () {
+            stopDragging();
+        },
+        onUnchoose: function () {
+            stopDragging();
+        }
+    });
+};
 
 onMounted(() => {
     widgetGroupRefs.value.forEach(el => {
         if (el) {
-            sortableInstances.value.push(
-                new Sortable(el, {
-                    animation: 150,
-                    group: createWidgetLibrarySortableGroup(),
-                    sort: false,
-                    draggable: WIDGET_LIBRARY_DRAGGABLE_SELECTOR,
-                    ghostClass: "sortable-ghost",
-                    onStart: function () {
-                        startDragging();
-                    },
-                    onEnd: function () {
-                        stopDragging();
-                    },
-                    onUnchoose: function () {
-                        stopDragging();
-                    }
-                })
-            );
+            sortableInstances.value.push(createLibrarySortable(el, createWidgetLibrarySortableGroup(), WIDGET_LIBRARY_DRAGGABLE_SELECTOR));
         }
+    });
+    Object.values(templateGroupRefs.value).forEach(el => {
+        if (el) sortableInstances.value.push(createLibrarySortable(el, createTemplateLibrarySortableGroup(), TEMPLATE_LIBRARY_DRAGGABLE_SELECTOR));
     });
 });
 
@@ -169,6 +236,79 @@ onUnmounted(() => {
                         white-space: nowrap;
                     }
                 }
+            }
+
+            .template-group {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 12px;
+                padding-bottom: 6px;
+            }
+
+            .template-item {
+                min-width: 0;
+                overflow: hidden;
+                border: 1px solid var(--el-border-color-light);
+                border-radius: 2px;
+                background-color: var(--el-bg-color);
+                cursor: grab;
+
+                &:active {
+                    cursor: grabbing;
+                }
+            }
+
+            .template-image-frame {
+                overflow: hidden;
+                background-color: var(--el-fill-color-extra-light);
+            }
+
+            .template-image,
+            .template-image-fallback {
+                width: 100%;
+                height: 100%;
+            }
+
+            .template-image {
+                display: block;
+                object-fit: contain;
+                pointer-events: none;
+            }
+
+            .template-image-fallback {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 12px;
+                color: var(--el-text-color-secondary);
+                font-size: 13px;
+                text-align: center;
+            }
+
+            .template-card-body {
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                padding: 8px 10px 10px;
+            }
+
+            .template-name,
+            .template-description {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .template-name {
+                color: var(--el-text-color-primary);
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .template-description {
+                color: var(--el-text-color-secondary);
+                font-size: 12px;
             }
         }
     }

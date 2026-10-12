@@ -9,6 +9,25 @@ import { useCreateDefaultData as createHtmlDefaultData, useSettingDataValueChang
 import { useCreateDefaultData as createRowDefaultData } from "@/views/composables/widgets/row-container";
 
 describe("designer form document", () => {
+    it("保存恢复保留隐藏配置，且不依据control覆盖运行脚本修改的isShow", () => {
+        const form = createFormDefaultData();
+        const configuredHidden = createTextDefaultData();
+        changeTextSetting(configuredHidden, "control", ["isHidden"]);
+        const runtimeHidden = createTextDefaultData();
+        runtimeHidden.isShow = false;
+        form.widgets.push(configuredHidden, runtimeHidden);
+        const created = createDesignerFormDocument(form);
+        if (!created.ok) throw new Error("创建文档失败");
+        const restored = restoreDesignerFormDocument(created.data);
+        if (!restored.ok) throw new Error("恢复文档失败");
+        const widgets = restored.data.form.widgets;
+        if (!("control" in widgets[0].settingData!) || !("control" in widgets[1].settingData!)) throw new Error("缺少控制属性");
+        expect(widgets[0].isShow).toBe(false);
+        expect(widgets[0].settingData!.control).toEqual(["isHidden"]);
+        expect(widgets[1].isShow).toBe(false);
+        expect(widgets[1].settingData!.control).toEqual([]);
+        expect(runtimeHidden.componentAttributes).toBeDefined();
+    });
     const inspectHtml = (html: string) => (html.includes("onerror") ? ({ ok: false, message: "HTML 内容包含高危代码：onerror" } as const) : ({ ok: true, data: html } as const));
 
     it("导出文档只包含版本和不含运行属性的表单", () => {
