@@ -34,6 +34,24 @@
     ),
     $checkbox: (
         "font-size": 12px
+    ),
+    $alert: (
+        "title-font-size": 12px,
+        "description-font-size": 12px,
+        "close-customed-font-size": 12px
+    ),
+    $dialog: (
+        "content-font-size": 12px
+    ),
+    $pagination: (
+        "font-size": 12px
+    )
+);
+
+// Switch 的标签字号在组件模块中独立定义，必须在全量样式首次加载前配置。
+@use "element-plus/theme-chalk/src/switch.scss" with (
+    $switch-font-size: (
+        "default": 12px
     )
 );
 
