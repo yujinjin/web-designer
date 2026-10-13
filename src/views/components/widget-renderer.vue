@@ -107,15 +107,26 @@
         <el-upload
             v-else-if="widgetData.code === widgetList.WIDGET_UPLOAD.code"
             v-model:file-list="renderValue"
+            class="widget-upload"
             v-bind="renderComponentAttributes"
             v-on="getWidgetComponentEvents(widgetData, formData, widgetFormData)"
         >
-            <el-button type="primary">点击上传</el-button>
+            <div v-if="renderComponentAttributes.drag" class="widget-upload__drop-content" :class="{ 'widget-upload__drop-content--card': renderComponentAttributes.listType === 'picture-card' }">
+                <el-icon class="widget-upload__drop-icon" aria-hidden="true"><UploadFilled /></el-icon>
+                <div v-if="renderComponentAttributes.listType === 'picture-card'" class="widget-upload__drop-text">拖拽或点击添加</div>
+                <div v-else class="widget-upload__drop-text">
+                    将文件拖到此处，或
+                    <em>点击上传</em>
+                </div>
+            </div>
+            <el-icon v-else-if="renderComponentAttributes.listType === 'picture-card'" class="widget-upload__add" aria-label="添加图片"><Plus /></el-icon>
+            <el-button v-else type="primary">点击上传</el-button>
         </el-upload>
     </el-form-item>
 </template>
 <script setup lang="ts">
 import { computed, type PropType } from "vue";
+import { Plus, UploadFilled } from "@element-plus/icons-vue";
 import { type WidgetFormData, type WidgetNormalData } from "@/views/composables/types";
 import { useFormItemRules } from "@/views/composables/widgets/form";
 import { getWidgetComponentEvents, getWidgetList } from "@/views/composables/widget-registry";
@@ -182,5 +193,91 @@ const widgetList = getWidgetList();
 .html-contents {
     overflow-wrap: anywhere;
     font-size: 14px;
+}
+
+.widget-upload {
+    width: 100%;
+    min-width: 0;
+
+    // 卡片拖拽使用内层边框，消除双层边框和默认 padding 对居中的影响。
+    :deep(.el-upload--picture-card.is-drag) {
+        border: 0;
+
+        .el-upload-dragger {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &.is-dragover {
+                padding: 0;
+            }
+        }
+    }
+
+    :deep(.el-upload-list--text),
+    :deep(.el-upload-list--picture) {
+        width: 100%;
+        min-width: 0;
+
+        .el-upload-list__item-name {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            align-items: flex-start;
+            text-align: left;
+            line-height: 1.5;
+
+            .el-icon--document {
+                flex-shrink: 0;
+                height: 1.5em;
+            }
+        }
+
+        .el-upload-list__item-file-name {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            text-overflow: clip;
+        }
+    }
+}
+
+.widget-upload__drop-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 8px;
+
+    &--card {
+        gap: 8px;
+
+        .widget-upload__drop-icon {
+            font-size: 28px;
+        }
+    }
+}
+
+.widget-upload__drop-icon {
+    font-size: 40px;
+    color: var(--el-text-color-placeholder);
+}
+
+.widget-upload__drop-text {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--el-text-color-regular);
+
+    em {
+        color: var(--el-color-primary);
+        font-style: normal;
+    }
+}
+
+.widget-upload__add {
+    font-size: 28px;
+    color: var(--el-text-color-secondary);
 }
 </style>

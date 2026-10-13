@@ -251,7 +251,7 @@ describe("widget drag drop", () => {
     });
 
     it("统一画布安全边距并使用外置完整浮层", () => {
-        expect(centerRenderPanelSource).toMatch(/\.tool-bar\s*\{[\s\S]*?height: 40px/);
+        expect(centerRenderPanelSource).toMatch(/\.tool-bar\s*\{[\s\S]*?height: calc\(var\(--el-tabs-header-height, 40px\) \+ 1px\)/);
         expect(centerRenderPanelSource).toMatch(/\.render-panel\s*\{[\s\S]*?padding: 16px/);
         expect(centerRenderPanelSource).toMatch(/\.drop-container\s*\{[\s\S]*?padding-top: 16px/);
         expect(centerRenderPanelSource).toMatch(/\.drag-item\s*\{[\s\S]*?\+ \.drag-item\s*\{[\s\S]*?margin-top: 16px/);

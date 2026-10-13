@@ -26,10 +26,11 @@ describe("designer form preview UI", () => {
         expect(appSource).toContain("previewWidgetFormData.value = previewResult.data");
     });
 
-    it("Dialog 关闭后销毁内容并释放快照且只提供关闭命令", () => {
+    it("Dialog 关闭后销毁内容并释放快照，不再提供footer操作区", () => {
         expect(dialogSource).toContain("destroy-on-close");
         expect(dialogSource).toContain("@closed=\"emit('closed')\"");
-        expect(dialogSource).toContain("关闭");
+        expect(dialogSource).not.toContain("#footer");
+        expect(dialogSource).not.toContain("<el-button");
         expect(appSource).toContain("previewWidgetFormData.value = null");
         expect(dialogSource).not.toContain("提交");
         expect(dialogSource).not.toContain("重置");

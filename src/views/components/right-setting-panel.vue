@@ -90,6 +90,7 @@ const widgetComponent = computed(() => {
 
         .el-tabs__header {
             flex: none;
+            height: calc(var(--el-tabs-header-height, 40px) + 1px);
             margin: 0;
             background-color: #ffffff;
             border-bottom: 1px solid #e9ecef;

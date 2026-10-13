@@ -187,6 +187,7 @@ const { isShowJsCodeEditorDialog, eventValue, showJsCodeEditorDialog, closeJsCod
 .option-config-row {
     display: flex;
     flex-direction: column;
+    margin-bottom: 16px;
 
     .label-text {
         padding: 8px 0px;

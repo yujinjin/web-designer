@@ -239,13 +239,17 @@ onUnmounted(() => {
     flex: 1;
 
     .tool-bar {
-        height: 40px;
-        flex: 0 0 40px;
+        height: calc(var(--el-tabs-header-height, 40px) + 1px);
+        flex: 0 0 calc(var(--el-tabs-header-height, 40px) + 1px);
+        position: relative;
+        z-index: 10;
         display: flex;
         align-items: center;
         justify-content: flex-end;
         padding: 0 12px;
         background-color: var(--el-bg-color);
+        border-bottom: 1px solid var(--el-border-color-lighter);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
         .tool-group {
             display: flex;
