@@ -18,6 +18,9 @@
                             <el-checkbox value="isHidden">隐藏</el-checkbox>
                         </el-checkbox-group>
                     </el-form-item>
+                    <el-form-item>
+                        <el-button @click="changeSelectedWidgetSettingData?.(showAlert, 'control', null)">显示提示信息</el-button>
+                    </el-form-item>
                     <el-form-item label="标题" prop="title">
                         <el-input
                             type="text"
@@ -96,7 +99,7 @@
 import { ref, inject, type PropType } from "vue";
 import { type WidgetAlertData, type ChangeSelectedWidgetSettingDataFun } from "@/views/composables/types";
 import { usePropNameValidator } from "@/views/composables/validator";
-import { useSettingDataValueChange } from "@/views/composables/widgets/alert";
+import { useSettingDataValueChange, showAlert } from "@/views/composables/widgets/alert";
 
 const props = defineProps({
     settingData: {

@@ -2,7 +2,7 @@
     <!-- eslint-disable-next-line vue/no-v-html -->
     <div v-if="widgetData.code === widgetList.WIDGET_HTML.code" class="html-contents" v-html="htmlDefaultValue"></div>
     <div v-else-if="widgetData.code === widgetList.WIDGET_ALERT.code" class="alert-box">
-        <el-alert v-bind="renderComponentAttributes" />
+        <el-alert :key="getAlertRenderKey(widgetData)" v-bind="renderComponentAttributes" />
     </div>
     <div v-else-if="widgetData.code === widgetList.WIDGET_DIVIDER.code" class="divider-box">
         <el-divider v-bind="renderComponentAttributes">
@@ -131,6 +131,7 @@ import { type WidgetFormData, type WidgetNormalData } from "@/views/composables/
 import { useFormItemRules } from "@/views/composables/widgets/form";
 import { getWidgetComponentEvents, getWidgetList } from "@/views/composables/widget-registry";
 import { sanitizeHtmlForRendering } from "@/views/composables/html-safety";
+import { getAlertRenderKey } from "@/views/composables/widgets/alert";
 
 const props = defineProps({
     widgetData: {

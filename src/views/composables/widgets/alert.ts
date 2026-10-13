@@ -5,7 +5,8 @@
  * 输入组件的 disabled/readonly 等 control 语义不会透传到 Alert，避免展示组件携带无效交互属性。
  */
 import { randomId } from "@yujinjin/utils";
-import { type WidgetAlertData } from "../types";
+import { ref, toRaw, type Ref } from "vue";
+import { type WidgetAlertData, type WidgetBaseData } from "../types";
 import { buildDefinedAttributes } from "@/views/composables/widget-attribute-utils";
 
 /** 注册表使用的提示组件稳定 code 与组件库展示元数据。 */
@@ -15,6 +16,25 @@ export const WIDGET_ALERT = {
     description: "用于显示提示信息",
     icon: "icon-alert"
 };
+
+/** 提示节点的临时重挂载标识；弱引用避免删除节点后残留状态，且不进入设计 JSON。 */
+const alertRenderKeys = new WeakMap<WidgetBaseData, Ref<number>>();
+
+/**
+ * @description 获取提示节点的响应式渲染标识，用于重置 ElAlert 自身的关闭状态。
+ * @param widgetData 当前节点，代理和原始对象共享同一状态。
+ * @returns 当前节点的临时递增标识。
+ * @remarks 以对象身份隔离预览副本和重复实例，不使用可重复的业务 ID 作为全局缓存键。
+ */
+export function getAlertRenderKey(widgetData: WidgetBaseData): number {
+    const node = toRaw(widgetData);
+    let key = alertRenderKeys.get(node);
+    if (!key) {
+        key = ref(0);
+        alertRenderKeys.set(node, key);
+    }
+    return key.value;
+}
 
 /**
  * @description 获取 Alert 的运行态属性。
@@ -95,4 +115,20 @@ export function useSettingDataValueChange(widgetAlertData: WidgetAlertData, file
             break;
     }
     (widgetAlertData.settingData as any)[fileName] = value;
+}
+
+/**
+ * @description 恢复当前提示的设计显隐，并使 ElAlert 重新挂载以清除内部关闭状态。
+ * @param widgetAlertData 由统一设置入口定位的当前提示节点。
+ * @returns 无返回值；清除隐藏控制项并递增临时渲染标识，保留内容、样式与运行属性引用。
+ * @remarks ElAlert 的 close 只改变内部 visible，单独设置根级 isShow 无法让已关闭的实例再次显示。
+ */
+export function showAlert(widgetAlertData: WidgetAlertData): void {
+    useSettingDataValueChange(
+        widgetAlertData,
+        "control",
+        widgetAlertData.settingData.control.filter(item => item !== "isHidden")
+    );
+    getAlertRenderKey(widgetAlertData);
+    alertRenderKeys.get(toRaw(widgetAlertData))!.value++;
 }
