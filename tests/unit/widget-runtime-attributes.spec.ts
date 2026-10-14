@@ -3,25 +3,25 @@
  */
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { buildWidgetComponentAttributes, WIDGET_DEFINITIONS } from "@/views/composables/widget-registry";
-import { cloneWidgetData } from "@/views/composables/widget-tree";
-import { useCreateDefaultData as createRowContainerDefaultData } from "@/views/composables/widgets/row-container";
-import { useCreateDefaultData as createTextDefaultData, useSettingDataValueChange as changeTextSetting } from "@/views/composables/widgets/text";
-import { useCreateDefaultData as createSelectDefaultData, useSettingDataValueChange as changeSelectSetting } from "@/views/composables/widgets/select";
-import { useCreateDefaultData as createSwitchDefaultData, useSettingDataValueChange as changeSwitchSetting } from "@/views/composables/widgets/switch";
-import { useCreateDefaultData as createDatePickerDefaultData, useSettingDataValueChange as changeDatePickerSetting } from "@/views/composables/widgets/date-picker";
-import { useCreateDefaultData as createUploadDefaultData, useSettingDataValueChange as changeUploadSetting } from "@/views/composables/widgets/upload";
-import { useCreateDefaultData as createInputNumberDefaultData, useSettingDataValueChange as changeInputNumberSetting } from "@/views/composables/widgets/input-number";
-import { useCreateDefaultData as createRadioGroupDefaultData, useSettingDataValueChange as changeRadioGroupSetting } from "@/views/composables/widgets/radio-group";
-import { useCreateDefaultData as createCheckboxGroupDefaultData, useSettingDataValueChange as changeCheckboxGroupSetting } from "@/views/composables/widgets/checkbox-group";
-import { useCreateDefaultData as createCascaderDefaultData, useSettingDataValueChange as changeCascaderSetting } from "@/views/composables/widgets/cascader";
-import { useCreateDefaultData as createTimePickerDefaultData, useSettingDataValueChange as changeTimePickerSetting } from "@/views/composables/widgets/time-picker";
-import { useCreateDefaultData as createTimeSelectDefaultData, useSettingDataValueChange as changeTimeSelectSetting } from "@/views/composables/widgets/time-select";
-import { useCreateDefaultData as createRateDefaultData, useSettingDataValueChange as changeRateSetting } from "@/views/composables/widgets/rate";
-import { useCreateDefaultData as createColorPickerDefaultData, useSettingDataValueChange as changeColorPickerSetting } from "@/views/composables/widgets/color-picker";
-import { useCreateDefaultData as createSliderDefaultData, useSettingDataValueChange as changeSliderSetting } from "@/views/composables/widgets/slider";
-import { useCreateDefaultData as createAlertDefaultData, useSettingDataValueChange as changeAlertSetting } from "@/views/composables/widgets/alert";
-import { useCreateDefaultData as createDividerDefaultData, useSettingDataValueChange as changeDividerSetting } from "@/views/composables/widgets/divider";
+import { buildWidgetComponentAttributes, WIDGET_DEFINITIONS } from "@/views/domain/widgets/registry";
+import { cloneWidgetData } from "@/views/domain/widgets/tree";
+import { useCreateDefaultData as createRowContainerDefaultData } from "@/views/domain/widgets/adapters/row-container";
+import { useCreateDefaultData as createTextDefaultData, useSettingDataValueChange as changeTextSetting } from "@/views/domain/widgets/adapters/text";
+import { useCreateDefaultData as createSelectDefaultData, useSettingDataValueChange as changeSelectSetting } from "@/views/domain/widgets/adapters/select";
+import { useCreateDefaultData as createSwitchDefaultData, useSettingDataValueChange as changeSwitchSetting } from "@/views/domain/widgets/adapters/switch";
+import { useCreateDefaultData as createDatePickerDefaultData, useSettingDataValueChange as changeDatePickerSetting } from "@/views/domain/widgets/adapters/date-picker";
+import { useCreateDefaultData as createUploadDefaultData, useSettingDataValueChange as changeUploadSetting } from "@/views/domain/widgets/adapters/upload";
+import { useCreateDefaultData as createInputNumberDefaultData, useSettingDataValueChange as changeInputNumberSetting } from "@/views/domain/widgets/adapters/input-number";
+import { useCreateDefaultData as createRadioGroupDefaultData, useSettingDataValueChange as changeRadioGroupSetting } from "@/views/domain/widgets/adapters/radio-group";
+import { useCreateDefaultData as createCheckboxGroupDefaultData, useSettingDataValueChange as changeCheckboxGroupSetting } from "@/views/domain/widgets/adapters/checkbox-group";
+import { useCreateDefaultData as createCascaderDefaultData, useSettingDataValueChange as changeCascaderSetting } from "@/views/domain/widgets/adapters/cascader";
+import { useCreateDefaultData as createTimePickerDefaultData, useSettingDataValueChange as changeTimePickerSetting } from "@/views/domain/widgets/adapters/time-picker";
+import { useCreateDefaultData as createTimeSelectDefaultData, useSettingDataValueChange as changeTimeSelectSetting } from "@/views/domain/widgets/adapters/time-select";
+import { useCreateDefaultData as createRateDefaultData, useSettingDataValueChange as changeRateSetting } from "@/views/domain/widgets/adapters/rate";
+import { useCreateDefaultData as createColorPickerDefaultData, useSettingDataValueChange as changeColorPickerSetting } from "@/views/domain/widgets/adapters/color-picker";
+import { useCreateDefaultData as createSliderDefaultData, useSettingDataValueChange as changeSliderSetting } from "@/views/domain/widgets/adapters/slider";
+import { useCreateDefaultData as createAlertDefaultData, useSettingDataValueChange as changeAlertSetting } from "@/views/domain/widgets/adapters/alert";
+import { useCreateDefaultData as createDividerDefaultData, useSettingDataValueChange as changeDividerSetting } from "@/views/domain/widgets/adapters/divider";
 
 /**
  * @description 将属性对象中的函数替换为稳定标记，供全量重建结果比较。
@@ -37,9 +37,9 @@ const normalizeFunctions = function (attributes: Record<string, any> | undefined
     );
 };
 
-const widgetRendererSource = readFileSync(new URL("../../src/views/components/widget-renderer.vue", import.meta.url), "utf-8");
-const widgetRuntimeUrl = new URL("../../src/views/composables/widget-runtime.ts", import.meta.url);
-const widgetAttributeUtilsSource = readFileSync(new URL("../../src/views/composables/widget-attribute-utils.ts", import.meta.url), "utf-8");
+const widgetRendererSource = readFileSync(new URL("../../src/views/components/rendering/widget-renderer.vue", import.meta.url), "utf-8");
+const widgetRuntimeUrl = new URL("../../src/views/domain/widgets/widget-runtime.ts", import.meta.url);
+const widgetAttributeUtilsSource = readFileSync(new URL("../../src/views/utils/widget-attributes.ts", import.meta.url), "utf-8");
 const widgetModuleNames = [
     "text",
     "input-number",
@@ -60,7 +60,7 @@ const widgetModuleNames = [
 ] as const;
 const widgetModuleSources = widgetModuleNames.map(moduleName => ({
     moduleName,
-    source: readFileSync(new URL(`../../src/views/composables/widgets/${moduleName}.ts`, import.meta.url), "utf-8")
+    source: readFileSync(new URL(`../../src/views/domain/widgets/adapters/${moduleName}.ts`, import.meta.url), "utf-8")
 }));
 
 describe("widget runtime attributes", () => {

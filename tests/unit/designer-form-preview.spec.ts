@@ -2,10 +2,10 @@
  * @fileoverview 验证表单预览快照隔离、重复创建和初始化脚本运行协议。
  */
 import { describe, expect, it } from "vitest";
-import { createDesignerFormPreviewSnapshot, runDesignerFormPreviewInit } from "@/views/composables/designer-form-preview";
-import { useCreateDefaultData as createFormDefaultData } from "@/views/composables/widgets/form";
-import { useCreateDefaultData as createTextDefaultData } from "@/views/composables/widgets/text";
-import { getWidgetComponentEvents } from "@/views/composables/widget-registry";
+import { createDesignerFormPreviewSnapshot, runDesignerFormPreviewInit } from "@/views/domain/preview/preview-runtime";
+import { useCreateDefaultData as createFormDefaultData } from "@/views/domain/form/form-adapter";
+import { useCreateDefaultData as createTextDefaultData } from "@/views/domain/widgets/adapters/text";
+import { getWidgetComponentEvents } from "@/views/domain/widgets/registry";
 
 describe("designer form preview", () => {
     it("每次创建独立快照并恢复运行属性且不修改设计源", () => {

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { parseCascaderOptionsJson, validateCascaderOptions } from "@/views/composables/widgets/cascader";
+import { parseCascaderOptionsJson, validateCascaderOptions } from "@/views/domain/widgets/adapters/cascader";
 
 describe("cascader options", () => {
     it("级联选项解析与组件适配由同一模块维护", () => {

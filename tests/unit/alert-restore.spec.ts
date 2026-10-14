@@ -3,10 +3,11 @@
  */
 import { describe, expect, it } from "vitest";
 import { reactive, ref, watchEffect, nextTick } from "vue";
-import { getAlertRenderKey, showAlert, useCreateDefaultData, useSettingDataValueChange } from "@/views/composables/widgets/alert";
-import { useCreateDefaultData as createForm } from "@/views/composables/widgets/form";
-import { useCreateDefaultData as createRow } from "@/views/composables/widgets/row-container";
-import useWidgetManage from "@/views/composables/widget-manage";
+import { getAlertRenderKey, showAlert } from "@/views/composables/use-alert-render-state";
+import { useCreateDefaultData, useSettingDataValueChange } from "@/views/domain/widgets/adapters/alert";
+import { useCreateDefaultData as createForm } from "@/views/domain/form/form-adapter";
+import { useCreateDefaultData as createRow } from "@/views/domain/widgets/adapters/row-container";
+import useWidgetManage from "@/views/composables/use-widget-manage";
 
 describe("alert restore", () => {
     it("恢复显示清除隐藏设置并重置渲染标识，保留提示配置和属性引用", () => {

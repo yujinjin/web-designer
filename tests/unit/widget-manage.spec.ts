@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { ref } from "vue";
-import { type WidgetFormData } from "@/views/composables/types";
-import useWidgetManage from "@/views/composables/widget-manage";
-import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/composables/widgets/form";
-import { useCreateDefaultData as useCreateRowContainerDefaultData } from "@/views/composables/widgets/row-container";
-import { useCreateDefaultData as useCreateTextDefaultData, useSettingDataValueChange as useTextSettingDataValueChange } from "@/views/composables/widgets/text";
-import { useCreateDefaultData as useCreateSwitchDefaultData, useSettingDataValueChange as useSwitchSettingDataValueChange } from "@/views/composables/widgets/switch";
+import { type WidgetFormData } from "@/views/types";
+import useWidgetManage from "@/views/composables/use-widget-manage";
+import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/domain/form/form-adapter";
+import { useCreateDefaultData as useCreateRowContainerDefaultData } from "@/views/domain/widgets/adapters/row-container";
+import { useCreateDefaultData as useCreateTextDefaultData, useSettingDataValueChange as useTextSettingDataValueChange } from "@/views/domain/widgets/adapters/text";
+import { useCreateDefaultData as useCreateSwitchDefaultData, useSettingDataValueChange as useSwitchSettingDataValueChange } from "@/views/domain/widgets/adapters/switch";
 
 describe("widget manager", () => {
     it("模板按目标索引原子插入并选中第一个新增组件", () => {

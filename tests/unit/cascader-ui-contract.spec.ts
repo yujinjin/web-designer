@@ -4,10 +4,10 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const widgetRendererSource = readFileSync(new URL("../../src/views/components/widget-renderer.vue", import.meta.url), "utf-8");
+const widgetRendererSource = readFileSync(new URL("../../src/views/components/rendering/widget-renderer.vue", import.meta.url), "utf-8");
 const cascaderRendererUrl = new URL("../../src/views/components/cascader-widget-renderer.vue", import.meta.url);
-const cascaderSettingSource = readFileSync(new URL("../../src/views/components/widgets-setting/cascader.vue", import.meta.url), "utf-8");
-const rightSettingPanelSource = readFileSync(new URL("../../src/views/components/right-setting-panel.vue", import.meta.url), "utf-8");
+const cascaderSettingSource = readFileSync(new URL("../../src/views/components/settings/selections/cascader.vue", import.meta.url), "utf-8");
+const rightSettingPanelSource = readFileSync(new URL("../../src/views/components/workspace/right-setting-panel.vue", import.meta.url), "utf-8");
 
 describe("cascader UI contract", () => {
     it("通用渲染器直接分发级联选择器", () => {
@@ -42,6 +42,6 @@ describe("cascader UI contract", () => {
 
     it("右侧设置面板按注册 code 加载级联设置组件", () => {
         expect(rightSettingPanelSource).toContain("case widgetList.WIDGET_CASCADER.code:");
-        expect(rightSettingPanelSource).toContain('import("./widgets-setting/cascader.vue")');
+        expect(rightSettingPanelSource).toContain('import("@/views/components/settings/selections/cascader.vue")');
     });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildWidgetComponentAttributes, createWidgetDefaultData, getWidgetComponentEvents, getWidgetGroup, getWidgetList } from "@/views/composables/widget-registry";
-import { useCreateDefaultData, useEvents, useSettingDataValueChange } from "@/views/composables/widgets/cascader";
-import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/composables/widgets/form";
+import { buildWidgetComponentAttributes, createWidgetDefaultData, getWidgetComponentEvents, getWidgetGroup, getWidgetList } from "@/views/domain/widgets/registry";
+import { useCreateDefaultData, useEvents, useSettingDataValueChange } from "@/views/domain/widgets/adapters/cascader";
+import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/domain/form/form-adapter";
 
 describe("cascader widget", () => {
     it("创建相互隔离的本地树且不包含远程数据源配置", () => {

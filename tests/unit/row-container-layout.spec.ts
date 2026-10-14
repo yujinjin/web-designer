@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { nextTick, reactive, ref } from "vue";
-import { calcAverageSpans, normalizeRowContainerSpan } from "@/views/composables/row-container-layout";
-import { type WidgetFormData } from "@/views/composables/types";
-import useWidgetManage from "@/views/composables/widget-manage";
-import { isRowContainerWidget } from "@/views/composables/widget-tree";
-import { useCreateDefaultData as useCreateFormDefaultData, useFlatWidgetList, useFormRenderData, useSubmitFormData } from "@/views/composables/widgets/form";
-import { useCreateDefaultData as useCreateRowContainerDefaultData } from "@/views/composables/widgets/row-container";
-import { useCreateDefaultData as useCreateTextDefaultData } from "@/views/composables/widgets/text";
+import { calcAverageSpans, normalizeRowContainerSpan } from "@/views/domain/widgets/layout/row-container-layout";
+import { type WidgetFormData } from "@/views/types";
+import useWidgetManage from "@/views/composables/use-widget-manage";
+import { isRowContainerWidget } from "@/views/domain/widgets/tree";
+import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/domain/form/form-adapter";
+import { useFlatWidgetList, useSubmitFormData } from "@/views/domain/form/form-runtime";
+import { useFormRenderData } from "@/views/composables/use-form-render-data";
+import { useCreateDefaultData as useCreateRowContainerDefaultData } from "@/views/domain/widgets/adapters/row-container";
+import { useCreateDefaultData as useCreateTextDefaultData } from "@/views/domain/widgets/adapters/text";
 
 describe("row container layout", () => {
     it("自动平均分配 24 栅格并把余数分配给前面的组件", () => {

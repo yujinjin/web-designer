@@ -3,10 +3,10 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { getFormTemplateList } from "@/views/composables/form-template-registry";
+import { getFormTemplateList } from "@/views/domain/templates/registry";
 
-const leftPanelSource = readFileSync(new URL("../../src/views/components/left-widget-panel.vue", import.meta.url), "utf-8");
-const centerPanelSource = readFileSync(new URL("../../src/views/components/center-render-panel.vue", import.meta.url), "utf-8");
+const leftPanelSource = readFileSync(new URL("../../src/views/components/workspace/left-widget-panel.vue", import.meta.url), "utf-8");
+const centerPanelSource = readFileSync(new URL("../../src/views/components/canvas/center-render-panel.vue", import.meta.url), "utf-8");
 
 describe("form template library UI", () => {
     it("模板页签使用可写状态并展示 34 个单列 PNG 卡片", () => {

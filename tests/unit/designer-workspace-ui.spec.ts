@@ -6,17 +6,10 @@ import { describe, expect, it } from "vitest";
 import { createSSRApp, h, reactive, ref } from "vue";
 import { renderToString } from "vue/server-renderer";
 import ElementPlus, { ID_INJECTION_KEY, ZINDEX_INJECTION_KEY } from "element-plus";
-import centerRenderPanel from "@/views/components/center-render-panel.vue";
-import { type WidgetFormData } from "@/views/composables/types";
-import {
-    calculateWorkspacePanelSizes,
-    CENTER_PANEL_MIN_WIDTH,
-    LEFT_PANEL_LIMITS,
-    normalizeWorkspacePanelSizes,
-    RIGHT_PANEL_LIMITS,
-    WORKSPACE_MIN_WIDTH
-} from "@/views/composables/designer-workspace-layout";
-import { useWidgetOperationTarget } from "@/views/composables/widget-operation-target";
+import centerRenderPanel from "@/views/components/canvas/center-render-panel.vue";
+import { type WidgetFormData } from "@/views/types";
+import { calculateWorkspacePanelSizes, CENTER_PANEL_MIN_WIDTH, LEFT_PANEL_LIMITS, normalizeWorkspacePanelSizes, RIGHT_PANEL_LIMITS, WORKSPACE_MIN_WIDTH } from "@/views/utils/workspace-layout";
+import { useWidgetOperationTarget } from "@/views/composables/use-widget-operation-target";
 import {
     createWidgetLibrarySortableGroup,
     createWidgetLibraryTargetGroup,
@@ -28,18 +21,18 @@ import {
     ROW_CONTAINER_DRAGGABLE_SELECTOR,
     TEMPLATE_LIBRARY_DRAGGABLE_SELECTOR,
     TEMPLATE_LIBRARY_SORTABLE_GROUP,
-    useSortableDragState,
     WIDGET_LIBRARY_DRAGGABLE_SELECTOR,
     WIDGET_LIBRARY_SORTABLE_GROUP
-} from "@/views/composables/widget-drag-drop";
-import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/composables/widgets/form";
-import { useCreateDefaultData as useCreateRowContainerDefaultData } from "@/views/composables/widgets/row-container";
-import { useCreateDefaultData as useCreateTextDefaultData } from "@/views/composables/widgets/text";
+} from "@/views/utils/drag-drop-config";
+import { useSortableDragState } from "@/views/composables/use-sortable-drag-state";
+import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/domain/form/form-adapter";
+import { useCreateDefaultData as useCreateRowContainerDefaultData } from "@/views/domain/widgets/adapters/row-container";
+import { useCreateDefaultData as useCreateTextDefaultData } from "@/views/domain/widgets/adapters/text";
 
-const centerRenderPanelSource = readFileSync(new URL("../../src/views/components/center-render-panel.vue", import.meta.url), "utf-8");
-const leftWidgetPanelSource = readFileSync(new URL("../../src/views/components/left-widget-panel.vue", import.meta.url), "utf-8");
-const rowContainerRendererSource = readFileSync(new URL("../../src/views/components/row-container-renderer.vue", import.meta.url), "utf-8");
-const widgetRendererSource = readFileSync(new URL("../../src/views/components/widget-renderer.vue", import.meta.url), "utf-8");
+const centerRenderPanelSource = readFileSync(new URL("../../src/views/components/canvas/center-render-panel.vue", import.meta.url), "utf-8");
+const leftWidgetPanelSource = readFileSync(new URL("../../src/views/components/workspace/left-widget-panel.vue", import.meta.url), "utf-8");
+const rowContainerRendererSource = readFileSync(new URL("../../src/views/components/canvas/row-container-renderer.vue", import.meta.url), "utf-8");
+const widgetRendererSource = readFileSync(new URL("../../src/views/components/rendering/widget-renderer.vue", import.meta.url), "utf-8");
 
 describe("designer workspace layout", () => {
     it("按目标比例初始化常见桌面宽度并遵守面板边界", () => {

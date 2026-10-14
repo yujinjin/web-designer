@@ -1,6 +1,6 @@
 <!--
- * @创建者: yujinjin9@126.com
- * @描述: 欢迎页面
+ * @fileoverview 表单设计器页面入口，拥有根设计状态并装配三栏工作区与独立预览。
+ * @remarks 子面板只读取 readonly 注入并通过管理器操作更新；布局与文档副作用由专属 composable 管理。
 -->
 <template>
     <div class="main-container">
@@ -25,49 +25,28 @@
     </div>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted, provide, readonly, ref, reactive, shallowRef } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { type WidgetFormData } from "@/views/composables/types";
-import useWidgetManage from "@/views/composables/widget-manage";
-import { createDesignerFormDocument, parseDesignerFormDocumentText, restoreDesignerFormDocument } from "@/views/composables/designer-form-document";
-import { downloadJsonText, JSON_FILE_MAX_BYTES, readJsonFileText } from "@/views/composables/browser-json-file";
-import { useCreateDefaultData } from "@/views/composables/widgets/form";
-import useStorageStore from "@/stores/storage";
-import {
-    calculateWorkspacePanelSizes,
-    CENTER_PANEL_MIN_WIDTH,
-    LEFT_PANEL_LIMITS,
-    normalizeWorkspacePanelSizes,
-    RIGHT_PANEL_LIMITS,
-    WORKSPACE_MIN_WIDTH
-} from "@/views/composables/designer-workspace-layout";
-import leftWidgetPanel from "@/views/components/left-widget-panel.vue";
-import centerRenderPanel from "@/views/components/center-render-panel.vue";
-import rightSettingPanel from "@/views/components/right-setting-panel.vue";
-import designerFormPreviewDialog from "@/views/components/designer-form-preview-dialog.vue";
-import { createDesignerFormPreviewSnapshot } from "@/views/composables/designer-form-preview";
+import { provide, readonly, ref, reactive, shallowRef } from "vue";
+import { ElMessage } from "element-plus";
+import { type WidgetFormData } from "@/views/types";
+import useWidgetManage from "@/views/composables/use-widget-manage";
+import { useCreateDefaultData } from "@/views/domain/form/form-adapter";
+import { CENTER_PANEL_MIN_WIDTH, LEFT_PANEL_LIMITS, RIGHT_PANEL_LIMITS, WORKSPACE_MIN_WIDTH } from "@/views/utils/workspace-layout";
+import { useDesignerWorkspaceLayout } from "@/views/composables/use-designer-workspace-layout";
+import { useDesignerDocumentActions } from "@/views/composables/use-designer-document-actions";
+import leftWidgetPanel from "@/views/components/workspace/left-widget-panel.vue";
+import centerRenderPanel from "@/views/components/canvas/center-render-panel.vue";
+import rightSettingPanel from "@/views/components/workspace/right-setting-panel.vue";
+import designerFormPreviewDialog from "@/views/components/preview/designer-form-preview-dialog.vue";
+import { createDesignerFormPreviewSnapshot } from "@/views/domain/preview/preview-runtime";
 
-// 首次加载按当前视口计算三栏宽度，窄屏按工作区最小宽度计算并交由外层滚动。
-const initialPanelSizes = calculateWorkspacePanelSizes(typeof window === "undefined" ? WORKSPACE_MIN_WIDTH : window.innerWidth);
+// 面板宽度只属于当前工作区会话，与表单持久化内容隔离。
+const { leftPanelSize, centerPanelSize, rightPanelSize, handleWorkspaceResizeEnd } = useDesignerWorkspaceLayout();
 
-// Splitter 当前会话中的左侧组件库宽度。
-const leftPanelSize = ref(initialPanelSizes.left);
-
-// Splitter 当前会话中的中间渲染区宽度。
-const centerPanelSize = ref(initialPanelSizes.center);
-
-// Splitter 当前会话中的右侧设置区宽度。
-const rightPanelSize = ref(initialPanelSizes.right);
-
-// 用户拖动后保留其左右栏像素宽度，窗口变化只重新分配剩余画布空间。
-const hasAdjustedPanelSize = ref(false);
-
-// 表单数据，必须是响应式，否则组件管理无法更新
-// 使编辑器 Vue TS Plugin 再次展开完整 Reactive<WidgetFormData>，容易产生 TS2589“类型实例化过深”。
+/**
+ * @description 页面唯一可编辑的表单根状态，子面板通过 readonly 注入读取。
+ * @remarks 深层字段仍需响应式；显式 WidgetFormData 断言只限制类型展开，避免 Vue TS Plugin 对巨大联合类型产生 TS2589，不改变响应式行为。
+ */
 const widgetFormData = reactive(useCreateDefaultData()) as WidgetFormData;
-
-// 本地草稿每次通过 Store action 直接读写，不进入 Pinia state。
-const storageStore = useStorageStore();
 
 // 选中的组件id
 const selectedWigetId = ref<string | null>(null);
@@ -75,7 +54,10 @@ const selectedWigetId = ref<string | null>(null);
 // 控制独立表单预览 Dialog 的显示状态。
 const isPreviewVisible = ref(false);
 
-/** 当前一次打开使用的独立预览快照；关闭完成后释放引用。 */
+/**
+ * @description 当前一次打开使用的独立预览快照。
+ * @remarks shallowRef 只追踪快照替换，预览组件内部负责建立深层响应式；关闭动画完成后释放引用，避免预览交互写回设计器。
+ */
 const previewWidgetFormData = shallowRef<WidgetFormData | null>(null);
 
 // 组件管理
@@ -92,7 +74,7 @@ const {
     replaceWidgetFormData
 } = useWidgetManage(widgetFormData, selectedWigetId);
 
-// 提供表单数据、改变表单数据、改变选中的组件的设置数据、选中的组件id、改变选中的组件id
+// 统一注入契约保留原键名；所有子面板写操作经管理器，避免绕过选中状态和树结构规则。
 provide("widgetFormData", readonly(widgetFormData));
 provide("changeFormSettingData", changeFormSettingData);
 provide("changeSelectedWidgetSettingData", changeSelectedWidgetSettingData);
@@ -109,6 +91,7 @@ provide("changeSelectedWidgetId", changeSelectedWidgetId);
  * @returns 无返回值；快照失败时仅展示原因并保持 Dialog 关闭。
  */
 const handlePreview = function (): void {
+    // 创建独立可运行副本，配置错误时不打开空预览。
     const previewResult = createDesignerFormPreviewSnapshot(widgetFormData);
     if (!previewResult.ok) {
         ElMessage.error(`表单预览失败：${previewResult.message}`);
@@ -126,159 +109,8 @@ const handlePreviewClosed = function (): void {
     previewWidgetFormData.value = null;
 };
 
-/**
- * @description 将当前表单设计投影为与导出文件同格式的文档并通过 Storage Store 保存。
- * @returns 无返回值；成功或失败均通过 Element Plus 消息反馈。
- * @remarks 领域投影先完成 JSON 转换并排除 componentAttributes，Storage Store 只负责不缓存的持久化写入。
- */
-const handleSaveLocalDraft = function (): void {
-    const documentResult = createDesignerFormDocument(widgetFormData);
-    if (!documentResult.ok) {
-        ElMessage.error(documentResult.message);
-        return;
-    }
-    try {
-        storageStore.setDesignerFormDraft(documentResult.data);
-        ElMessage.success("当前设计已保存到本地");
-    } catch {
-        ElMessage.error("本地保存失败，请检查浏览器存储权限或空间");
-    }
-};
-
-/**
- * @description 生成当前设计器 V1 文档并下载格式化 JSON 文件。
- * @returns 无返回值；序列化、大小或浏览器下载失败时显示错误反馈。
- */
-const handleExportJson = function (): void {
-    const documentResult = createDesignerFormDocument(widgetFormData);
-    if (!documentResult.ok) {
-        ElMessage.error(documentResult.message);
-        return;
-    }
-    try {
-        const text = JSON.stringify(documentResult.data, null, 4);
-        if (new TextEncoder().encode(text).byteLength > JSON_FILE_MAX_BYTES) {
-            ElMessage.error("导出失败：JSON 文件不能超过 2 MiB");
-            return;
-        }
-        const timestamp = new Date().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
-        downloadJsonText(text, `web-designer-form-${timestamp}.json`);
-        ElMessage.success("JSON 导出成功");
-    } catch {
-        ElMessage.error("JSON 导出失败，请检查浏览器下载权限");
-    }
-};
-
-/**
- * @description 读取、校验并在用户确认后原子导入表单设计文档。
- * @param file Center Panel 文件选择器提供的单个 JSON 文件。
- * @returns Promise 完成后无返回值；任一失败或取消分支均保持当前设计及本地草稿不变。
- * @remarks 动态脚本只编译不执行；HTML 发现任何被白名单移除的高危内容会直接拒绝，合法动态内容需额外风险确认。
- */
-const handleImportJson = async function (file: File): Promise<void> {
-    const fileResult = await readJsonFileText(file, JSON_FILE_MAX_BYTES);
-    if (!fileResult.ok) {
-        ElMessage.error(fileResult.message);
-        return;
-    }
-    const documentResult = parseDesignerFormDocumentText(fileResult.data);
-    if (!documentResult.ok) {
-        ElMessage.error(`JSON 导入失败：${documentResult.path ? `${documentResult.path} ` : ""}${documentResult.message}`);
-        return;
-    }
-    const hasDynamicContent = documentResult.data.dynamicContent.hasDynamicScripts || documentResult.data.dynamicContent.hasHtml;
-    const message = hasDynamicContent
-        ? "导入将覆盖当前设计。该文件包含动态脚本或 HTML 内容，后续渲染或交互时可能执行代码、发起请求或展示自定义内容。请确认文件来源可信，是否继续？"
-        : "导入将覆盖当前设计，是否继续？";
-    try {
-        await ElMessageBox.confirm(message, "导入 JSON", {
-            type: hasDynamicContent ? "warning" : "info",
-            confirmButtonText: "确认导入",
-            cancelButtonText: "取消"
-        });
-    } catch {
-        return;
-    }
-    replaceWidgetFormData(documentResult.data.document.form);
-    ElMessage.success("JSON 导入成功");
-};
-
-/**
- * @description 检测上次保存的草稿，并在用户确认后恢复到当前设计器。
- * @returns Promise 完成后无返回值；无草稿或用户取消时保留默认设计。
- * @remarks 读取、结构校验和运行属性构建全部发生在状态提交之前，任何失败都不会产生半更新表单，也不会删除原草稿。
- */
-const restoreLastDesignerFormDraft = async function (): Promise<void> {
-    let storedDraft: unknown;
-    try {
-        storedDraft = storageStore.getDesignerFormDraft();
-    } catch {
-        ElMessage.error("上次保存的设计读取失败，请检查浏览器存储权限");
-        return;
-    }
-    if (storedDraft === undefined || storedDraft === null) return;
-    const documentResult = restoreDesignerFormDocument(storedDraft);
-    if (!documentResult.ok) {
-        ElMessage.error(`上次保存的设计读取失败：${documentResult.message}`);
-        return;
-    }
-    const savedAtText = documentResult.data.savedAt ? `（保存时间：${new Date(documentResult.data.savedAt).toLocaleString("zh-CN", { hour12: false })}）` : "";
-    try {
-        await ElMessageBox.confirm(`检测到上次保存的设计${savedAtText}，是否恢复继续编辑？`, "恢复上次设计", {
-            type: "info",
-            confirmButtonText: "恢复",
-            cancelButtonText: "取消"
-        });
-    } catch {
-        return;
-    }
-    replaceWidgetFormData(documentResult.data.form);
-    ElMessage.success("已恢复上次保存的设计");
-};
-
-/**
- * @description 同步窗口变化后的三栏尺寸。
- * @returns 无返回值；该函数更新三个 Splitter Panel 的会话级宽度。
- * @remarks 用户尚未拖动时重新使用响应式初始比例；拖动后保留左右像素宽度，并再次应用 min/max 约束。
- */
-const syncWorkspacePanelSizes = function (): void {
-    const availableWidth = Math.max(window.innerWidth, WORKSPACE_MIN_WIDTH);
-    const panelSizes = hasAdjustedPanelSize.value ? normalizeWorkspacePanelSizes(availableWidth, leftPanelSize.value, rightPanelSize.value) : calculateWorkspacePanelSizes(availableWidth);
-
-    leftPanelSize.value = panelSizes.left;
-    centerPanelSize.value = panelSizes.center;
-    rightPanelSize.value = panelSizes.right;
-};
-
-/**
- * @description 记录用户已经主动调整面板，并归一化 Splitter 返回的像素尺寸。
- * @param _index - 本次拖动的分隔线索引；当前三栏使用统一约束，不需要区分索引。
- * @param sizes - Element Plus Splitter 返回的左、中、右面板像素宽度。
- * @returns 无返回值；该函数更新当前会话的面板宽度。
- */
-const handleWorkspaceResizeEnd = function (_index: number, sizes: number[]): void {
-    const panelSizes = normalizeWorkspacePanelSizes(Math.max(window.innerWidth, WORKSPACE_MIN_WIDTH), sizes[0] ?? leftPanelSize.value, sizes[2] ?? rightPanelSize.value);
-    hasAdjustedPanelSize.value = true;
-    leftPanelSize.value = panelSizes.left;
-    centerPanelSize.value = panelSizes.center;
-    rightPanelSize.value = panelSizes.right;
-};
-
-/**
- * @description 注册窗口尺寸同步，使未拖动布局随视口变化，已拖动布局继续遵守像素边界。
- * @remarks 监听器只维护局部 UI 状态，不会写入本地存储或表单业务数据；卸载时必须释放全局引用。
- */
-onMounted(() => {
-    window.addEventListener("resize", syncWorkspacePanelSizes);
-    void restoreLastDesignerFormDraft();
-});
-
-/**
- * @description 移除工作区窗口监听，避免页面重新挂载后重复执行尺寸计算。
- */
-onUnmounted(() => {
-    window.removeEventListener("resize", syncWorkspacePanelSizes);
-});
+// 文档候选通过管理器原子应用，避免领域层直接修改页面拥有的响应式根对象。
+const { handleSaveLocalDraft, handleExportJson, handleImportJson } = useDesignerDocumentActions(widgetFormData, replaceWidgetFormData);
 </script>
 <style lang="scss" scoped>
 .main-container {

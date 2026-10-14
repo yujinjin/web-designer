@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { WIDGET_DEFINITIONS, buildWidgetComponentAttributes, createWidgetDefaultData, getWidgetComponentEvents, getWidgetGroup, getWidgetList } from "@/views/composables/widget-registry";
-import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/composables/widgets/form";
+import { WIDGET_DEFINITIONS, buildWidgetComponentAttributes, createWidgetDefaultData, getWidgetComponentEvents, getWidgetGroup, getWidgetList } from "@/views/domain/widgets/registry";
+import { useCreateDefaultData as useCreateFormDefaultData } from "@/views/domain/form/form-adapter";
 
 const expectedWidgetListKeys = [
     "WIDGET_TEXT",

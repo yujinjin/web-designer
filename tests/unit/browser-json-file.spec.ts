@@ -2,7 +2,7 @@
  * @fileoverview 验证浏览器 JSON 文件读取上限和下载资源释放。
  */
 import { describe, expect, it, vi } from "vitest";
-import { downloadJsonText, readJsonFileText } from "@/views/composables/browser-json-file";
+import { downloadJsonText, readJsonFileText } from "@/views/utils/browser-json-file";
 
 describe("browser json file", () => {
     it("读取 UTF-8 JSON 文本并拒绝超限或空文件", async () => {

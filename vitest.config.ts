@@ -11,6 +11,8 @@ export default defineConfig({
     },
     resolve: {
         alias: {
+            // Monaco 是浏览器专用包且没有根入口；组件单测替代编辑器边界前仍需可解析的模块路径。
+            "monaco-editor": path.resolve(__dirname, "node_modules/monaco-editor/esm/vs/editor/editor.api.js"),
             "@": path.resolve(__dirname, "src"),
             "@views": path.resolve(__dirname, "src/views"),
             "@components": path.resolve(__dirname, "src/components"),

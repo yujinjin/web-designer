@@ -2,7 +2,7 @@
  * @fileoverview 验证 Widget 动态脚本从完整源码到函数体及运行函数的统一转换规则。
  */
 import { describe, expect, it } from "vitest";
-import { createAsyncWidgetComponentFunction, createWidgetComponentFunction, extractFunctionBody } from "@/views/composables/widget-script-utils";
+import { createAsyncWidgetComponentFunction, createWidgetComponentFunction, extractFunctionBody } from "@/views/utils/widget-scripts";
 
 describe("widget script utils", () => {
     it("从普通函数和异步函数源码中提取多行函数体", () => {

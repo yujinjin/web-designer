@@ -4,13 +4,14 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { createFormTemplateWidgets, getFormTemplateGroups, getFormTemplateList, validateFormTemplateWidgets } from "@/views/composables/form-template-registry";
-import { getWidgetComponentEvents, WIDGET_DEFINITIONS } from "@/views/composables/widget-registry";
-import { useCreateDefaultData as createFormDefaultData, useFlatWidgetList, useFormItemRules } from "@/views/composables/widgets/form";
-import { useCreateDefaultData as createRowDefaultData } from "@/views/composables/widgets/row-container";
-import { useCreateDefaultData as createTextDefaultData } from "@/views/composables/widgets/text";
-import { createTemplateField } from "@/views/composables/form-template-builders";
-import { type WidgetTextData, type WidgetCascaderData, type WidgetInputNumberData } from "@/views/composables/types";
+import { createFormTemplateWidgets, getFormTemplateGroups, getFormTemplateList, validateFormTemplateWidgets } from "@/views/domain/templates/registry";
+import { getWidgetComponentEvents, WIDGET_DEFINITIONS } from "@/views/domain/widgets/registry";
+import { useCreateDefaultData as createFormDefaultData } from "@/views/domain/form/form-adapter";
+import { useFlatWidgetList, useFormItemRules } from "@/views/domain/form/form-runtime";
+import { useCreateDefaultData as createRowDefaultData } from "@/views/domain/widgets/adapters/row-container";
+import { useCreateDefaultData as createTextDefaultData } from "@/views/domain/widgets/adapters/text";
+import { createTemplateField } from "@/views/domain/templates/builders";
+import { type WidgetTextData, type WidgetCascaderData, type WidgetInputNumberData } from "@/views/types";
 
 describe("form template registry", () => {
     it("行业模块有10至14个有效字段，问卷有9至10题且默认至少8题可见", () => {

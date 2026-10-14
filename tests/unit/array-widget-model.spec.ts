@@ -3,11 +3,11 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { useCreateDefaultData as createCheckboxGroupDefaultData, useSettingDataValueChange as changeCheckboxGroupSetting } from "@/views/composables/widgets/checkbox-group";
-import { useCreateDefaultData as createUploadDefaultData, useSettingDataValueChange as changeUploadSetting } from "@/views/composables/widgets/upload";
+import { useCreateDefaultData as createCheckboxGroupDefaultData, useSettingDataValueChange as changeCheckboxGroupSetting } from "@/views/domain/widgets/adapters/checkbox-group";
+import { useCreateDefaultData as createUploadDefaultData, useSettingDataValueChange as changeUploadSetting } from "@/views/domain/widgets/adapters/upload";
 
-const widgetRendererSource = readFileSync(new URL("../../src/views/components/widget-renderer.vue", import.meta.url), "utf-8");
-const checkboxGroupSettingSource = readFileSync(new URL("../../src/views/components/widgets-setting/checkbox-group.vue", import.meta.url), "utf-8");
+const widgetRendererSource = readFileSync(new URL("../../src/views/components/rendering/widget-renderer.vue", import.meta.url), "utf-8");
+const checkboxGroupSettingSource = readFileSync(new URL("../../src/views/components/settings/selections/checkbox-group.vue", import.meta.url), "utf-8");
 
 describe("array widget model", () => {
     it("复选框组默认值使用相互隔离的空数组", () => {

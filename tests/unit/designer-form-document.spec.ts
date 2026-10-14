@@ -2,11 +2,11 @@
  * @fileoverview 验证可交换表单文档、动态脚本门禁和 HTML 高危内容拒绝规则。
  */
 import { describe, expect, it } from "vitest";
-import { createDesignerFormDocument, parseDesignerFormDocumentText, restoreDesignerFormDocument } from "@/views/composables/designer-form-document";
-import { useCreateDefaultData as createFormDefaultData } from "@/views/composables/widgets/form";
-import { useCreateDefaultData as createTextDefaultData, useSettingDataValueChange as changeTextSetting } from "@/views/composables/widgets/text";
-import { useCreateDefaultData as createHtmlDefaultData, useSettingDataValueChange as changeHtmlSetting } from "@/views/composables/widgets/html";
-import { useCreateDefaultData as createRowDefaultData } from "@/views/composables/widgets/row-container";
+import { createDesignerFormDocument, parseDesignerFormDocumentText, restoreDesignerFormDocument } from "@/views/domain/document/document";
+import { useCreateDefaultData as createFormDefaultData } from "@/views/domain/form/form-adapter";
+import { useCreateDefaultData as createTextDefaultData, useSettingDataValueChange as changeTextSetting } from "@/views/domain/widgets/adapters/text";
+import { useCreateDefaultData as createHtmlDefaultData, useSettingDataValueChange as changeHtmlSetting } from "@/views/domain/widgets/adapters/html";
+import { useCreateDefaultData as createRowDefaultData } from "@/views/domain/widgets/adapters/row-container";
 
 describe("designer form document", () => {
     it("保存恢复保留隐藏配置，且不依据control覆盖运行脚本修改的isShow", () => {

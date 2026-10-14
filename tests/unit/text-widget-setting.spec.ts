@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const textSettingSource = readFileSync(new URL("../../src/views/components/widgets-setting/text.vue", import.meta.url), "utf-8");
+const textSettingSource = readFileSync(new URL("../../src/views/components/settings/inputs/text.vue", import.meta.url), "utf-8");
 
 describe("text widget setting", () => {
     it("最大长度配置展示在字数统计开关之前", () => {

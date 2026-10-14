@@ -2,7 +2,7 @@
  * @fileoverview 验证 HTML 设置值只有通过安全检查后才更新设计数据。
  */
 import { describe, expect, it, vi } from "vitest";
-import { updateHtmlDefaultValue, useCreateDefaultData, useSettingDataValueChange } from "@/views/composables/widgets/html";
+import { updateHtmlDefaultValue, useCreateDefaultData, useSettingDataValueChange } from "@/views/domain/widgets/adapters/html";
 
 describe("html widget setting", () => {
     it("危险 HTML 不提交，修正为安全内容后恢复同步", () => {

@@ -3,7 +3,7 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import { type DOMPurify } from "dompurify";
-import { inspectHtmlSafety, sanitizeHtmlForRendering } from "@/views/composables/html-safety";
+import { inspectHtmlSafety, sanitizeHtmlForRendering } from "@/views/utils/html-safety";
 
 describe("html safety", () => {
     it("白名单内容完整保留时通过", () => {

@@ -3,9 +3,9 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import dayjs from "dayjs";
-import { useAttributes as buildDatePickerAttributes, useCreateDefaultData as createDatePickerDefaultData } from "@/views/composables/widgets/date-picker";
-import { useAttributes as buildSwitchAttributes, useCreateDefaultData as createSwitchDefaultData } from "@/views/composables/widgets/switch";
-import { useAttributes as buildTimePickerAttributes, useCreateDefaultData as createTimePickerDefaultData } from "@/views/composables/widgets/time-picker";
+import { useAttributes as buildDatePickerAttributes, useCreateDefaultData as createDatePickerDefaultData } from "@/views/domain/widgets/adapters/date-picker";
+import { useAttributes as buildSwitchAttributes, useCreateDefaultData as createSwitchDefaultData } from "@/views/domain/widgets/adapters/switch";
+import { useAttributes as buildTimePickerAttributes, useCreateDefaultData as createTimePickerDefaultData } from "@/views/domain/widgets/adapters/time-picker";
 
 describe("native widget attribute functions", () => {
     it("Switch beforeChange 以零参数执行", async () => {

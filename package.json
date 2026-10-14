@@ -32,6 +32,9 @@
         "preview": "vite preview",
         "format": "prettier --write \"**/*.{js,cjs,mjs,ts,tsx,json,css,scss,vue,html,md}\"",
         "test:unit": "vitest run",
+        "test:views": "vitest run tests/unit --exclude tests/unit/storage.spec.ts",
+        "test:views:types": "vue-tsc --noEmit -p tests/tsconfig.views-types.json",
+        "test:views:check": "vue-tsc --noEmit -p tests/tsconfig.views-tests.json",
         "lint": "eslint .",
         "lint:fix": "eslint --fix ."
     },
@@ -74,6 +77,7 @@
         "eslint-plugin-vitest": "^0.5.4",
         "eslint-plugin-vue": "^10.3.0",
         "globals": "^16.3.0",
+        "happy-dom": "^21.0.1",
         "prettier": "^3.6.2",
         "sass": "1.89.2",
         "ts-node": "^10.9.2",

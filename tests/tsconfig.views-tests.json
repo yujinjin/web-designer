@@ -1,0 +1,19 @@
+{
+    "extends": "../tsconfig.app.json",
+    "compilerOptions": {
+        "incremental": false,
+        "composite": false
+    },
+    "include": [
+        "../types/**/*.d.ts",
+        "../src/**/*.d.ts",
+        "./helpers/component-host.ts",
+        "./unit/settings-components-behavior.spec.ts",
+        "./unit/rendering-workspace-components.spec.ts",
+        "./unit/composables-behavior.spec.ts",
+        "./unit/document-actions-behavior.spec.ts",
+        "./unit/widget-manage-boundaries.spec.ts",
+        "./unit/domain-behavior.spec.ts",
+        "./unit/utils-behavior.spec.ts"
+    ]
+}

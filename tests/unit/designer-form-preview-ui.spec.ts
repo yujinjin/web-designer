@@ -5,17 +5,17 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createSSRApp, h } from "vue";
 import { renderToString } from "vue/server-renderer";
-import { WIDGET_DEFINITIONS } from "@/views/composables/widget-registry";
-import designerFormPreviewErrorBoundary from "@/views/components/designer-form-preview-error-boundary.vue";
+import { WIDGET_DEFINITIONS } from "@/views/domain/widgets/registry";
+import designerFormPreviewErrorBoundary from "@/views/components/preview/designer-form-preview-error-boundary.vue";
 
 const readSource = (path: string): string => readFileSync(new URL(path, import.meta.url), "utf-8");
 const appSource = readSource("../../src/views/app.vue");
-const centerPanelSource = readSource("../../src/views/components/center-render-panel.vue");
-const dialogSource = readSource("../../src/views/components/designer-form-preview-dialog.vue");
-const rendererSource = readSource("../../src/views/components/designer-form-preview-renderer.vue");
-const rowSource = readSource("../../src/views/components/designer-form-preview-row.vue");
-const widgetRendererSource = readSource("../../src/views/components/widget-renderer.vue");
-const errorBoundarySource = readSource("../../src/views/components/designer-form-preview-error-boundary.vue");
+const centerPanelSource = readSource("../../src/views/components/canvas/center-render-panel.vue");
+const dialogSource = readSource("../../src/views/components/preview/designer-form-preview-dialog.vue");
+const rendererSource = readSource("../../src/views/components/preview/designer-form-preview-renderer.vue");
+const rowSource = readSource("../../src/views/components/preview/designer-form-preview-row.vue");
+const widgetRendererSource = readSource("../../src/views/components/rendering/widget-renderer.vue");
+const errorBoundarySource = readSource("../../src/views/components/preview/designer-form-preview-error-boundary.vue");
 
 describe("designer form preview UI", () => {
     it("Center Panel 发出预览请求且根页面只在快照成功后打开 Dialog", () => {

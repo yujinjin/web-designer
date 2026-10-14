@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { useCreateDefaultData as useCreateDatePickerDefaultData, useSettingDataValueChange as changeDatePickerSetting } from "@/views/composables/widgets/date-picker";
-import { useCreateDefaultData as useCreateSwitchDefaultData, useSettingDataValueChange as changeSwitchSetting } from "@/views/composables/widgets/switch";
-import { useCreateDefaultData as useCreateTimePickerDefaultData, useSettingDataValueChange as changeTimePickerSetting } from "@/views/composables/widgets/time-picker";
-import { useCreateDefaultData as useCreateTimeSelectDefaultData, useSettingDataValueChange as changeTimeSelectSetting } from "@/views/composables/widgets/time-select";
-import { WIDGET_DEFINITIONS } from "@/views/composables/widget-registry";
-import { useCreateDefaultData as createRate, useSettingDataValueChange as changeRate } from "@/views/composables/widgets/rate";
+import { useCreateDefaultData as useCreateDatePickerDefaultData, useSettingDataValueChange as changeDatePickerSetting } from "@/views/domain/widgets/adapters/date-picker";
+import { useCreateDefaultData as useCreateSwitchDefaultData, useSettingDataValueChange as changeSwitchSetting } from "@/views/domain/widgets/adapters/switch";
+import { useCreateDefaultData as useCreateTimePickerDefaultData, useSettingDataValueChange as changeTimePickerSetting } from "@/views/domain/widgets/adapters/time-picker";
+import { useCreateDefaultData as useCreateTimeSelectDefaultData, useSettingDataValueChange as changeTimeSelectSetting } from "@/views/domain/widgets/adapters/time-select";
+import { WIDGET_DEFINITIONS } from "@/views/domain/widgets/registry";
+import { useCreateDefaultData as createRate, useSettingDataValueChange as changeRate } from "@/views/domain/widgets/adapters/rate";
 
 describe("widget default value settings", () => {
     it.each([
@@ -26,7 +26,7 @@ describe("widget default value settings", () => {
         "alert",
         "divider"
     ])("%s 的隐藏控制可往返，空control不隐藏", async code => {
-        const adapter = await import(`../../src/views/composables/widgets/${code}.ts`);
+        const adapter = await import(`../../src/views/domain/widgets/adapters/${code}.ts`);
         const widget = adapter.useCreateDefaultData();
         adapter.useSettingDataValueChange(widget, "control", ["isHidden"]);
         expect(widget.isShow).toBe(false);
