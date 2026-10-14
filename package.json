@@ -1,7 +1,7 @@
 {
     "name": "pc-form",
     "version": "0.1.0",
-    "description": "基于vite + vue3 + vue-router + pinia + element-plus + mockjs + typescript搭建的后台管理系统框架，风格：绿色、紧凑型",
+    "description": "基于vite + vue3 + vue-router + pinia + element-plus + typescript搭建的后台管理系统框架，风格：绿色、紧凑型",
     "type": "module",
     "keywords": [
         "h5"
@@ -21,14 +21,8 @@
         "url": "https://github.com/yujinjin/web-designer.git"
     },
     "scripts": {
-        "mdev": "cross-env MOCK_DATA=1 vite --mode dev",
-        "dev": "vite --mode dev",
-        "uat": "vite --mode uat",
-        "prd": "vite --mode prd",
-        "B_DEV": "vue-tsc -b && vite build --mode dev",
-        "B_UAT": "vue-tsc -b && vite build --mode uat",
-        "B_PRE": "vue-tsc -b && vite build --mode pre",
-        "B_PRD": "vue-tsc -b && vite build --mode prd",
+        "dev": "vite",
+        "build": "vue-tsc -b && vite build",
         "preview": "vite preview",
         "format": "prettier --write \"**/*.{js,cjs,mjs,ts,tsx,json,css,scss,vue,html,md}\"",
         "test:unit": "vitest run",
@@ -48,14 +42,12 @@
         "dompurify": "^3.4.15",
         "echarts": "^5.6.0",
         "element-plus": "^2.10.3",
-        "mockjs": "^1.1.0",
         "monaco-editor": "^0.52.2",
         "pinia": "^3.0.3",
         "sortablejs": "^1.15.6",
         "vue": "^3.5.17"
     },
     "devDependencies": {
-        "@types/mockjs": "^1.0.10",
         "@types/node": "^24.0.10",
         "@types/qrcode": "^1.5.5",
         "@types/sortablejs": "^1.15.9",
@@ -66,7 +58,6 @@
         "@vue/eslint-config-prettier": "^10.2.0",
         "@vue/eslint-config-typescript": "^14.6.0",
         "@vue/tsconfig": "^0.7.0",
-        "cross-env": "^7.0.3",
         "eslint": "^9.30.1",
         "eslint-config-prettier": "^10.1.5",
         "eslint-import-resolver-typescript": "^4.4.4",

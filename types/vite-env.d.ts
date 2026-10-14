@@ -32,6 +32,3 @@ declare const VITE_APP_BUILD_TIME: number;
 
 // 当前web项目服务部署根目录（路径）
 declare const VITE_APP_PROJECT_CONTENT_PATH: string;
-
-// 当前是否是mock数据模式（1：是，0：否）
-declare const VITE_MOCK_DATA: string;

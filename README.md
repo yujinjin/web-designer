@@ -4,6 +4,13 @@
 
 ## 表单组件列表
 
+项目只维护一套配置，不区分 UAT、PRD 或 Mock 开发模式。公共配置放在 `.env`，本机接口等覆盖保留在不入库的 `.env.local`。
+
+- `npm run dev`：本地开发。
+- `npm run build`：类型检查并生成静态构建。
+- `npm run preview`：查看静态构建结果。
+- `npm run test:views`：运行设计器相关单元测试。
+
 ### 基础组件
 
 - 文本框

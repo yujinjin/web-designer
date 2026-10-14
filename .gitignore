@@ -28,3 +28,5 @@ openspec/
 CLAUDE.md
 docs/
 .superpowers/
+AGENTS.md
+.playwright-mcp/

@@ -1,6 +1,6 @@
 import path from "node:path";
 // import { type PluginOption, defineConfig } from "vite";
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import vueJsx from "@vitejs/plugin-vue-jsx";
 import svgLoader from "vite-svg-loader";
@@ -9,15 +9,11 @@ import monacoEditorPlugin from "vite-plugin-monaco-editor";
 
 // console.info("monacoEditorPlugin:", isCDN);
 
-export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, process.cwd(), "VITE_");
-    // 现在可以通过 env 访问变量了
-    console.log("环境变量：", env);
-    console.log("接口地址：", env.VITE_APP_WEB_HASH);
+export default defineConfig(({ command }) => {
+    // 仅区分 Vite 开发服务和静态构建，不再维护自定义部署环境模式。
+    const isDev = command === "serve";
 
-    const isDev = process.env.NODE_ENV === "development" || mode === "dev";
-
-    const PROJECT_CONTENT_PATH = isDev ? "/" : "/crm";
+    const PROJECT_CONTENT_PATH = isDev ? "/" : "/pc-form/";
 
     return {
         base: PROJECT_CONTENT_PATH,
@@ -34,8 +30,7 @@ export default defineConfig(({ mode }) => {
         },
         define: {
             VITE_APP_BUILD_TIME: new Date().getTime(),
-            VITE_APP_PROJECT_CONTENT_PATH: JSON.stringify(PROJECT_CONTENT_PATH),
-            VITE_MOCK_DATA: JSON.stringify(process.env.MOCK_DATA || "0")
+            VITE_APP_PROJECT_CONTENT_PATH: JSON.stringify(PROJECT_CONTENT_PATH)
         },
         // 配置monaco-editor
         // optimizeDeps: {
@@ -53,7 +48,10 @@ export default defineConfig(({ mode }) => {
             }),
             // @ts-ignore
             monacoEditorPlugin.default({
-                languageWorkers: ["json", "css", "html", "typescript"]
+                languageWorkers: ["editorWorkerService", "json", "css", "html", "typescript"],
+                publicPath: "monacoeditorwork",
+                // base 是部署 URL 前缀，不是磁盘目录；避免插件默认生成 dist/pc-form/monacoeditorwork 导致部署后路径重复。
+                customDistPath: (root: string, outDir: string) => path.resolve(root, outDir, "monacoeditorwork")
             })
         ],
         esbuild: {
@@ -83,29 +81,8 @@ export default defineConfig(({ mode }) => {
                             return "assets/images/[name]-[hash].[ext]";
                         }
                         return "assets/[ext]/[name]-[hash].[ext]";
-                    },
-                    // 配置输出文件名和路径
-                    manualChunks(id) {
-                        if (id.includes("src/config.ts")) {
-                            // 要单独打包的文件路径
-                            return "config";
-                        } else if (id.includes("node_modules")) {
-                            if (id.includes("element-plus")) {
-                                return "element-plus";
-                            } else if (id.includes("echarts")) {
-                                return "echarts";
-                            } else if (id.includes("monaco-editor")) {
-                                return "monaco-editor/index";
-                            }
-                            return "vendor";
-                        }
-                        // 其他文件可以按照默认规则打包
-                        return;
                     }
-                    // manualChunks: {
-                    //     "echarts": ["echarts"],
-                    //     "element-plus": ["element-plus"]
-                    // }
+                    // 由 Rollup 按依赖关系自动分包；手动拆分 Vue、Element Plus 和 CMS 组件会形成分包循环，导致初始化时访问尚未创建的 ref 内部类。
                 }
             }
         }

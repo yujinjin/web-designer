@@ -11,7 +11,6 @@ import store from "@/stores/index";
 import directives from "@/services/directives";
 import plugins from "@/plugins/index";
 import registerEvents from "@/services/register-events";
-// import "../mock/test.js";
 import "@style/element-variables.scss";
 import "@yujinjin/cms-components/dist/index.css";
 import "@style/index.scss";
@@ -46,9 +45,6 @@ class AppMain {
 
     // 初始化
     async init() {
-        if (VITE_MOCK_DATA === "1") {
-            await import("@/mock/index");
-        }
         this.vueAppInstance = this.initVue();
         this.mount("#app");
     }

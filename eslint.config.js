@@ -70,7 +70,6 @@ export default defineConfig(
                 Nullable: true,
                 // 添加 Vite 定义的全局变量
                 VITE_APP_BUILD_TIME: true,
-                VITE_MOCK_DATA: true,
                 VITE_APP_PROJECT_CONTENT_PATH: true
             },
             parserOptions: {

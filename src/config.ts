@@ -4,7 +4,7 @@
  */
 /// <reference types="node" />
 
-import { BuildEnv } from "@/services/enums";
+import { type BuildEnv } from "@/services/enums";
 
 /** APP当前环境配置 */
 export interface Config {
@@ -48,7 +48,7 @@ export default <Config>{
     appName: import.meta.env.VITE_APP_NAME,
 
     /** 是否调试模式 */
-    isDebug: <BuildEnv>process.env.NODE_ENV === BuildEnv.DEVELOPMENT || import.meta.env.MODE === "dev",
+    isDebug: import.meta.env.DEV,
 
     /** 请求的API版本号 */
     apiVersion: "0.0.1",
